@@ -1,6 +1,9 @@
 import express from "express"
-import connectMongo from "../utility/db_connection.js";
+import globalErrorHandler from "../utility/globalErrorHandler.js";
 
-const app = express()
+const app = express();
 
+
+
+app.use(globalErrorHandler);
 export default app;
