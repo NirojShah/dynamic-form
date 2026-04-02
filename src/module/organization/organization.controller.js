@@ -8,6 +8,16 @@ const createOrganization = asyncErrorHandler(async (req, res) => {
   }
 
   const resp = await organizationService.processCreateOrg({ organizationName });
+  if (resp.success) {
+    return res.status(201).json({
+      status: "success",
+      message: resp.message,
+    });
+  }
+  return res.status(500).json({
+    status: "failed",
+    message: resp.message,
+  });
 });
 
 const updateOrganizaton = asyncErrorHandler(async (req, res) => {});
