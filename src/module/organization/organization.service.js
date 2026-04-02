@@ -34,6 +34,11 @@ const processUpdateOrg = async ({ organizationName, organizationId }) => {
     throw new Error("organization not found.");
   }
   organization.organizationName = organizationName;
+  await organization.save();
+  return {
+    success: true,
+    message: "updated successfully.",
+  };
 };
 
 const organizationService = {
