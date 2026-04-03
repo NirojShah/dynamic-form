@@ -1,44 +1,118 @@
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
+import cleanDto from "../../utility/clean.input.js";
 import Organization from "../organization/organization.model.js";
 import User from "./user.model.js";
+import { JsonWebTokenError as jwt } from "jsonwebtoken";
 
-const processSignup = asyncErrorHandler(
-  async (name, password, email, organizationId) => {
+const processSignup = async (name, password, email, organizationId) => {
+  const userExists = await User.findOne({
+    email: email,
+  });
+  if (userExists) {
+    throw new Error("You have already created an account.");
+  }
+
+  const organizationExists = await Organization.findOne({
+    organizationId,
+  });
+
+  if (!organizationExists) {
+    throw new Error("Organization not exists.");
+  }
+  await User.create({
+    name,
+    password,
+    email,
+    organization: organizationExists._id,
+  });
+
+  return {
+    success: true,
+    message: "User signup successfully",
+  };
+};
+
+const processLogin = async (password, email) => {
+  try {
     const userExists = await User.findOne({
-      email: email,
-    });
-    if (userExists) {
-      throw new Error("You have already created an account.");
-    }
-
-    const organizationExists = await Organization.findOne({
-        organizationId
-    })
-
-    if(!organizationExists){
-        throw new Error("Organization not exists.")
-    }
-    await User.create({
-      name,
-      password,
       email,
-      organization: organizationExists._id,
     });
+
+    if (!userExists) {
+      return {
+        status: "failed",
+        message: "user not exists please create an account.",
+      };
+    }
+    const correctPass = userExists.password == password;
+    if (!correctPass) {
+      return {
+        status: "failed",
+        message: "password not matching.",
+      };
+    }
+
+    const token = jwt.sign(
+      { name: userExists.name, organizationId: userExists.organization },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
 
     return {
-        success: true,
-        message: "User signup successfully"
+      success: true,
+      token: token,
+    };
+  } catch (err) {
+    return {
+      status: "failed",
+      message: err.message,
+    };
+  }
+};
+
+
+
+const processUpdateProfile = async (userId, password, email, name) => {
+  const cleanData = cleanDto({ password, email, name });
+
+  if (Object.keys(cleanData).length === 0) {
+    throw new Error("No valid fields provided for update");
+  }
+
+  if (cleanData.email) {
+    const userExists = await User.findOne({
+      email: cleanData.email,
+      _id: { $ne: userId },
+    });
+
+    if (userExists) {
+      throw new Error("Email already in use");
     }
-  },
-);
+  }
 
-const processLogin = asyncErrorHandler(async (password, email) => {});
+  if (cleanData.password) {
+    const saltRounds = 10;
+    // cleanData.password = await bcrypt.hash(cleanData.password, saltRounds);
 
-const processUpdateProfile = asyncErrorHandler(
-  async (password, email, name) => {},
-);
+  }
 
-const processDeactivateAccount = asyncErrorHandler(async (userId) => {});
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: cleanData },
+    {
+      new: true,          
+      runValidators: true 
+    }
+  );
+  if (!updatedUser) {
+    throw new Error("User not found");
+  }
+
+  return updatedUser;
+};
+
+const processDeactivateAccount = async (userId) => {
+};
 
 const userService = {
   processLogin,
