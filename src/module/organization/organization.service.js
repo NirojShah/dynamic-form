@@ -1,4 +1,3 @@
-import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
 import Organization from "./organization.model.js";
 
 const processCreateOrg = async ({ organizationName }) => {
