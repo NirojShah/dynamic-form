@@ -1,15 +1,15 @@
-import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
+import asyncCustomErrorHandler from "../../utility/asyncCustomErrorHandler.js";
 import cleanDto from "../../utility/clean.input.js";
 import Organization from "../organization/organization.model.js";
 import User from "./user.model.js";
-import { JsonWebTokenError as jwt } from "jsonwebtoken";
+import { JsonWebTokenCustomError as jwt } from "jsonwebtoken";
 
 const processSignup = async (name, password, email, organizationId) => {
   const userExists = await User.findOne({
     email: email,
   });
   if (userExists) {
-    throw new Error("You have already created an account.");
+    throw new CustomError(500,"You have already created an account.");
   }
 
   const organizationExists = await Organization.findOne({
@@ -17,7 +17,7 @@ const processSignup = async (name, password, email, organizationId) => {
   });
 
   if (!organizationExists) {
-    throw new Error("Organization not exists.");
+    throw new CustomError(500,"Organization not exists.");
   }
   await User.create({
     name,
@@ -76,7 +76,7 @@ const processUpdateProfile = async (userId, password, email, name) => {
   const cleanData = cleanDto({ password, email, name });
 
   if (Object.keys(cleanData).length === 0) {
-    throw new Error("No valid fields provided for update");
+    throw new CustomError(500,"No valid fields provided for update");
   }
 
   if (cleanData.email) {
@@ -86,7 +86,7 @@ const processUpdateProfile = async (userId, password, email, name) => {
     });
 
     if (userExists) {
-      throw new Error("Email already in use");
+      throw new CustomError(500,"Email already in use");
     }
   }
 
@@ -105,7 +105,7 @@ const processUpdateProfile = async (userId, password, email, name) => {
     }
   );
   if (!updatedUser) {
-    throw new Error("User not found");
+    throw new CustomError(500,"User not found");
   }
 
   return updatedUser;
