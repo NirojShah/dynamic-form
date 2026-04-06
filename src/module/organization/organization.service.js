@@ -1,3 +1,4 @@
+import CustomError from "../../utility/customError.js";
 import Organization from "./organization.model.js";
 
 const processCreateOrg = async ({ organizationName }) => {
@@ -6,7 +7,7 @@ const processCreateOrg = async ({ organizationName }) => {
   });
 
   if (exists) {
-    throw new Error("Organization already exists.");
+    throw new CustomError(500,"Organization already exists.");
   }
 
   const organization = await Organization.findOne().sort({
@@ -30,7 +31,7 @@ const processUpdateOrg = async ({ organizationName, organizationId }) => {
   });
 
   if (!organization) {
-    throw new Error("organization not found.");
+    throw new CustomError(500,"organization not found.");
   }
   organization.organizationName = organizationName;
   await organization.save();
