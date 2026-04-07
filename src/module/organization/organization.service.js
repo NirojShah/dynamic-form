@@ -26,7 +26,7 @@ const processCreateOrg = async ({ organizationName }) => {
 };
 
 const processUpdateOrg = async ({ organizationName, organizationId }) => {
-  const organization = await Organization.findone({
+  const organization = await Organization.findOne({
     organizationId,
   });
 
