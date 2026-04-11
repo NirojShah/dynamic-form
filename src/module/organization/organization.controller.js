@@ -3,6 +3,7 @@ import organizationService from "./organization.service.js";
 
 const createOrganization = asyncErrorHandler(async (req, res) => {
   const { organizationName } = req.body;
+
   if (!organizationName) {
     throw new Error("Organization name is requried.");
   }
@@ -38,7 +39,28 @@ const updateOrganizaton = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const getAllOrganization = asyncErrorHandler(async (req, res) => {
+  const { page, limit } = req.query;
+  const resp = await organizationService.processGetOrganizations({
+    page,
+    limit,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      status: "success",
+      data: resp.data,
+    });
+  }
+
+  return res.status(500).json({
+    status: "failed",
+    message: resp.message,
+  });
+});
+
 const orgController = {
+  getAllOrganization,
   createOrganization,
   updateOrganizaton,
 };
