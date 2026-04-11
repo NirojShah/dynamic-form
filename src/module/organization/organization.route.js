@@ -1,9 +1,10 @@
 import { Router } from "express";
-import organizationService from "./organization.service.js";
+import orgController from "./organization.controller.js";
 
 const orgRouter = Router()
 
-orgRouter.post("/create-org",organizationService.processCreateOrg);
-orgRouter.put("/update-org",organizationService.processUpdateOrg);
+orgRouter.post("/create-org",orgController.createOrganization);
+orgRouter.put("/update-org",orgController.updateOrganizaton);
+orgRouter.get("/",orgController.getAllOrganization)
 
 export default orgRouter;
