@@ -6,8 +6,8 @@ import orgRouter from "../module/organization/organization.route.js";
 const applicationRouter = Router();
 
 applicationRouter.use(formRoute)
-applicationRouter.use(userRoute)
-applicationRouter.use(orgRouter)
+applicationRouter.use("/user",userRoute)
+applicationRouter.use("/org",orgRouter)
 
 
 export default applicationRouter;
