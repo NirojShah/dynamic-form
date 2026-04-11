@@ -4,7 +4,8 @@ import applicationRouter from "./application.route.js";
 
 const app = express();
 
-app.use(applicationRouter)
+app.use(express.json())
+app.use("/app/v1",applicationRouter)
 
 
 app.use(globalErrorHandler);
