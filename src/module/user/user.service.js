@@ -1,15 +1,14 @@
-import asyncCustomErrorHandler from "../../utility/asyncCustomErrorHandler.js";
 import cleanDto from "../../utility/clean.input.js";
+import CustomError from "../../utility/customError.js";
 import Organization from "../organization/organization.model.js";
 import User from "./user.model.js";
-import { JsonWebTokenCustomError as jwt } from "jsonwebtoken";
 
-const processSignup = async (name, password, email, organizationId) => {
+const processSignup = async ({name, password, email, organizationId}) => {
   const userExists = await User.findOne({
     email: email,
   });
   if (userExists) {
-    throw new CustomError(500,"You have already created an account.");
+    throw new CustomError(500, "You have already created an account.");
   }
 
   const organizationExists = await Organization.findOne({
@@ -17,7 +16,7 @@ const processSignup = async (name, password, email, organizationId) => {
   });
 
   if (!organizationExists) {
-    throw new CustomError(500,"Organization not exists.");
+    throw new CustomError(500, "Organization not exists.");
   }
   await User.create({
     name,
@@ -70,13 +69,11 @@ const processLogin = async (password, email) => {
   }
 };
 
-
-
 const processUpdateProfile = async (userId, password, email, name) => {
   const cleanData = cleanDto({ password, email, name });
 
   if (Object.keys(cleanData).length === 0) {
-    throw new CustomError(500,"No valid fields provided for update");
+    throw new CustomError(500, "No valid fields provided for update");
   }
 
   if (cleanData.email) {
@@ -86,33 +83,31 @@ const processUpdateProfile = async (userId, password, email, name) => {
     });
 
     if (userExists) {
-      throw new CustomError(500,"Email already in use");
+      throw new CustomError(500, "Email already in use");
     }
   }
 
   if (cleanData.password) {
     const saltRounds = 10;
     // cleanData.password = await bcrypt.hash(cleanData.password, saltRounds);
-
   }
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { $set: cleanData },
     {
-      new: true,          
-      runValidators: true 
-    }
+      new: true,
+      runValidators: true,
+    },
   );
   if (!updatedUser) {
-    throw new CustomError(500,"User not found");
+    throw new CustomError(500, "User not found");
   }
 
   return updatedUser;
 };
 
-const processDeactivateAccount = async (userId) => {
-};
+const processDeactivateAccount = async (userId) => {};
 
 const userService = {
   processLogin,
@@ -120,3 +115,5 @@ const userService = {
   processUpdateProfile,
   processDeactivateAccount,
 };
+
+export default userService;
