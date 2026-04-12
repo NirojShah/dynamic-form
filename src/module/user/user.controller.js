@@ -25,6 +25,20 @@ const createUser = asyncErrorHandler(async (req, res) => {
 
 const login = asyncErrorHandler(async (req, res) => {
   const { email, password } = req.body;
+
+  const resp = await userService.processLogin({ email, password });
+  if (resp.success) {
+    return res.status(200).json({
+      status: "success",
+      token: resp.token,
+      message: resp.message,
+    });
+  }
+
+  return res.status(403).json({
+    status: "failed",
+    message: resp.message,
+  });
 });
 
 const updateProfile = asyncErrorHandler(async (req, res) => {
