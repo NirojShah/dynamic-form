@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken"
 import cleanDto from "../../utility/clean.input.js";
 import CustomError from "../../utility/customError.js";
 import Organization from "../organization/organization.model.js";
@@ -31,7 +32,7 @@ const processSignup = async ({name, password, email, organizationId}) => {
   };
 };
 
-const processLogin = async (password, email) => {
+const processLogin = async ({password, email}) => {
   try {
     const userExists = await User.findOne({
       email,
@@ -62,6 +63,7 @@ const processLogin = async (password, email) => {
       token: token,
     };
   } catch (err) {
+    console.log(err)
     return {
       status: "failed",
       message: err.message,
