@@ -1,4 +1,4 @@
-import { Jwt } from "jsonwebtoken";
+import jwt from "jsonwebtoken"
 
 const verifyToken = (req, res, next) => {
   try {
@@ -7,7 +7,7 @@ const verifyToken = (req, res, next) => {
     if (!token) {
       return res.status(401).json({ error: "No token, authorization denied" });
     }
-    const decoded = Jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (!decoded) {
       return res.status(401).json({ error: "Token is invalid or expired" });
@@ -16,6 +16,7 @@ const verifyToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
+    console.log(error)
     res.status(401).json({ error: "Authentication error" });
   }
 };
