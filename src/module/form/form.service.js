@@ -29,9 +29,25 @@ const processAddFields = async ({ formId, fields, updatedBy }) => {
   return form;
 };
 
+const processAllForms= async()=>{
+  try{
+    const forms = await SchemaModel.aggregate([{$match:{}}])
+    return {
+      success: true,
+      data: forms
+    }
+  }catch(err){
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+}
+
 const formService = {
   processCreateForm,
-  processAddFields
+  processAddFields,
+  processAllForms
 };
 
 export default formService;
