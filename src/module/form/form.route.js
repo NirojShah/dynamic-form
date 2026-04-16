@@ -5,5 +5,6 @@ const formRoute = express.Router();
 
 formRoute.post("/create", formController.createForm);
 formRoute.post("/create-fields", formController.addFileds);
+formRoute.get("/forms", formController.getAllforms);
 
 export default formRoute;
