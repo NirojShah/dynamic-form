@@ -1,8 +1,10 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
 const verifyToken = (req, res, next) => {
   try {
-    const token = req.cookies.access_token;
+    const authHeader = req.headers.authorization;
+    const token =
+      req.cookies?.access_token || (authHeader && authHeader.split(" ")[1]);
 
     if (!token) {
       return res.status(401).json({ error: "No token, authorization denied" });
@@ -16,7 +18,6 @@ const verifyToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    console.log(error)
     res.status(401).json({ error: "Authentication error" });
   }
 };
