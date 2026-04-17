@@ -3,6 +3,7 @@
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
 import CustomError from "../../utility/customError.js";
 import formService from "./form.service.js";
+import checkFormFields from "./form.validation.js";
 
 const createForm = asyncErrorHandler(async (req, res) => {
   const { name, organizationId } = req.body;
@@ -21,16 +22,18 @@ const createForm = asyncErrorHandler(async (req, res) => {
 
 const addFileds = asyncErrorHandler(async (req, res) => {
   const { fields, formId } = req.body;
-  const userId = req.user._id;
+  const userId = req.user.userId;
 
-  console.log({ fields, formId, userId });
+  const filteredFields = checkFormFields(fields);
 
-  throw new CustomError(500, "EHHH BOIII..");
+  if (!filteredFields.success) {
+    throw new CustomError(500, filteredFields.message);
+  }
 
   const result = await formService.processAddFields({
-    formId: req.params.formId,
-    fields: req.body.fields,
-    updatedBy: req.user._id,
+    formId: formId,
+    fields: filteredFields.fields,
+    updatedBy: userId,
   });
 
   res.status(200).json({
