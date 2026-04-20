@@ -1,26 +1,73 @@
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
 import CustomError from "../../utility/customError.js";
 import SchemaModel from "../form/form.model.js";
+import formDataService from "./formData.service.js";
+import validateFormData from "./formData.validation.js";
 
 const uploadData = asyncErrorHandler(async (req, res) => {
   const { formId, data } = req.body;
+
   if (!formId) {
-    throw new CustomError(500, "formId is required.");
+    throw new CustomError(400, "formId is required.");
   }
+
   const formExists = await SchemaModel.findById(formId);
 
   if (!formExists) {
-    throw new CustomError(500, "Invalid form id.");
+    throw new CustomError(404, "Invalid form id.");
   }
 
   const organizationId = formExists.organizationId;
 
-  //   CONTINUE..
+  const formDataValidation = await validateFormData({
+    formFields: formExists.fields,
+    data,
+  });
+
+  if (!formDataValidation.success) {
+    return res.status(400).json({
+      status: "failed",
+      errors: formDataValidation.errors,
+    });
+  }
+
+  const submittedData = await formDataService.processUploadData({
+    formData,
+    formId,
+    organizationId: formExists.organizationId,
+  });
+
+  if (submittedData.success) {
+    return res.status(200).json({
+      status: "success",
+      message: "form submitted successfully.",
+    });
+  }
+
+  throw new CustomError(500, submittedData.message);
 });
 
 const fetchUploadedFormData = asyncErrorHandler(async (req, res) => {
   const { formId } = req.params;
-  // CONTINUE.
+  const { page, limit } = req.query;
+  const formData = await formDataService.processGetFormData({
+    page,
+    limit,
+    formId,
+  });
+
+  if (formData.success) {
+    return res.status(200).json({
+      status: "success",
+      data: formData.data,
+      pagination: formData.pagination,
+    });
+  }
+
+  return res.satus(500).json({
+    status: "faiiled",
+    message: formData.message,
+  });
 });
 
 const fetchFilteredUploadedFormData = asyncErrorHandler(async (req, res) => {});
