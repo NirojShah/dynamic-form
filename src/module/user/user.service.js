@@ -1,10 +1,10 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 import cleanDto from "../../utility/clean.input.js";
 import CustomError from "../../utility/customError.js";
 import Organization from "../organization/organization.model.js";
 import User from "./user.model.js";
 
-const processSignup = async ({name, password, email, organizationId}) => {
+const processSignup = async ({ name, password, email, organizationId }) => {
   const userExists = await User.findOne({
     email: email,
   });
@@ -32,7 +32,7 @@ const processSignup = async ({name, password, email, organizationId}) => {
   };
 };
 
-const processLogin = async ({password, email}) => {
+const processLogin = async ({ password, email }) => {
   try {
     const userExists = await User.findOne({
       email,
@@ -53,7 +53,11 @@ const processLogin = async ({password, email}) => {
     }
 
     const token = jwt.sign(
-      { name: userExists.name, organizationId: userExists.organization,userId: userExists._id },
+      {
+        name: userExists.name,
+        organizationId: userExists.organization,
+        userId: userExists._id,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -63,7 +67,7 @@ const processLogin = async ({password, email}) => {
       token: token,
     };
   } catch (err) {
-    console.log(err)
+    console.log(err);
     return {
       status: "failed",
       message: err.message,
@@ -110,6 +114,25 @@ const processUpdateProfile = async (userId, password, email, name) => {
 };
 
 const processDeactivateAccount = async (userId) => {};
+
+const processSignupAdmin = async ({ email, password, name }) => {
+  const adminExists = await User.aggregate([
+    {
+      $match: {
+        role: {
+          $in: "Admin",
+        },
+      },
+    },
+  ]);
+
+  if (adminExists.length() > 0) {
+    return {
+      success: false,
+      message: "Admin already exists.",
+    };
+  }
+};
 
 const userService = {
   processLogin,
