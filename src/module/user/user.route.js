@@ -3,6 +3,7 @@ import userController from "./user.controller.js";
 
 const userRoute = Router();
 
+userRoute.post("/admin/signup", userController.createAdminProfile);
 userRoute.post("/signup", userController.createUser);
 userRoute.post("/login", userController.login);
 userRoute.put("/deactivate", userController.deactivateProfile);
