@@ -18,6 +18,9 @@ const UserModel = new Schema({
     ref: "Users",
     required: [true, "Organization is required."],
   },
+  role:{
+    type: [],
+  }
 });
 
 const User = model("Users", UserModel);
