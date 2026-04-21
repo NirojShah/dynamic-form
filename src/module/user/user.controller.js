@@ -49,11 +49,33 @@ const deactivateProfile = asyncErrorHandler(async (req, res) => {
   const { userId } = req.user;
 });
 
+const createAdminProfile = asyncErrorHandler(async (req, res) => {
+  const { name, password, email, organizationId } = req.body;
+  const resp = await userService.processSignupAdmin({
+    name,
+    email,
+    password,
+  });
+
+  if (resp.success) {
+    return res.status(201).json({
+      status: "success",
+      message: "user signedup successfully.",
+    });
+  }
+
+  return res.status(500).json({
+    status: "failed",
+    message: resp.message,
+  });
+});
+
 const userController = {
   createUser,
   login,
   updateProfile,
   deactivateProfile,
+  createAdminProfile,
 };
 
 export default userController;
