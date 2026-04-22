@@ -3,8 +3,29 @@ import SchemaModel from "../form/form.model.js";
 import UserInput from "./formData.model.js";
 import CustomError from "../../utility/customError.js";
 
-const processUploadData = async ({ formData, formId, organizationId }) => {
+const processUploadData = async ({
+  formData,
+  formId,
+  organizationId,
+  submittedBy,
+}) => {
   try {
+    const alreadyPresent = await UserInput.aggregate([
+      {
+        $match: {
+          formId: formId,
+          submittedBy: submittedBy,
+        },
+      },
+    ]);
+
+    if (alreadyPresent.length() > 0) {
+      return {
+        success: false,
+        message: "You have already submitted the form.",
+      };
+    }
+
     const createdEntry = await UserInput.create({
       formId,
       organizationId,
