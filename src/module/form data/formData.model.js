@@ -10,12 +10,16 @@ const userInput = new Schema(
       type: Schema.Types.Mixed,
       required: true,
     },
+    submittedBy: {
+      type: String,
+      required: [true, "Form submitted by is required."],
+    },
     organizationId: {
       type: Schema.ObjectId,
       required: [true, "Organization id is required."],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const UserInput = model("UserInput", userInput);
