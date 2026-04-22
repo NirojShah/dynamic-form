@@ -5,7 +5,14 @@ import formDataService from "./formData.service.js";
 import validateFormData from "./formData.validation.js";
 
 const uploadData = asyncErrorHandler(async (req, res) => {
-  const { formId, data } = req.body;
+  const { formId, data, submittedBy } = req.body;
+
+  if (!submittedBy || !submittedBy.contains("@")) {
+    return res.status(404).json({
+      status: "failed",
+      message: "Please share you email.",
+    });
+  }
 
   if (!formId) {
     throw new CustomError(400, "formId is required.");
@@ -35,6 +42,7 @@ const uploadData = asyncErrorHandler(async (req, res) => {
     formData,
     formId,
     organizationId: formExists.organizationId,
+    submittedBy: submittedBy,
   });
 
   if (submittedData.success) {
