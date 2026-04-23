@@ -6,10 +6,10 @@ import verifyToken from "../middleware/auth.middleware.js";
 
 const applicationRouter = Router();
 
-applicationRouter.use("/user",userRoute)
-applicationRouter.use(verifyToken)
-applicationRouter.use("/form",formRoute)
-applicationRouter.use("/org",orgRouter)
+applicationRouter.use("/user",userRoute);
+applicationRouter.use(verifyToken);
+applicationRouter.use("/form",formRoute);
+applicationRouter.use("/org",orgRouter);
 
 
 export default applicationRouter;
