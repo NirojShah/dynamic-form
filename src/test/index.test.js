@@ -1,6 +1,6 @@
     import functions from "../funcTesting.js";
 
-    test('toBe', () => { 
+    test("toBe", () => { 
         expect(functions.add(1,2)).toBe(3);
     });
 
