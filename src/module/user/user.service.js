@@ -94,7 +94,7 @@ const processUpdateProfile = async (userId, password, email, name) => {
   }
 
   if (cleanData.password) {
-    const saltRounds = 10;
+    // const saltRounds = 10;
     // cleanData.password = await bcrypt.hash(cleanData.password, saltRounds);
   }
 
@@ -113,7 +113,11 @@ const processUpdateProfile = async (userId, password, email, name) => {
   return updatedUser;
 };
 
-const processDeactivateAccount = async (userId) => {};
+const processDeactivateAccount = async (userId) => {
+  return {
+    userId,
+  };
+};
 
 const processSignupAdmin = async ({ email, password, name }) => {
   const adminExists = await User.aggregate([
@@ -132,6 +136,16 @@ const processSignupAdmin = async ({ email, password, name }) => {
       message: "Admin already exists.",
     };
   }
+  await User.create({
+    email,
+    password,
+    name,
+  });
+
+  return {
+    success: true,
+    message: "user created successfully..",
+  };
 };
 
 const userService = {
@@ -139,6 +153,7 @@ const userService = {
   processSignup,
   processUpdateProfile,
   processDeactivateAccount,
+  processSignupAdmin,
 };
 
 export default userService;

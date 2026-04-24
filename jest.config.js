@@ -1,5 +1,5 @@
 export default{
     testMatch:[
-        '<rootDir>/src/test/*.test.js'
+        "<rootDir>/src/test/*.test.js"
     ]
-}
+};

@@ -24,8 +24,6 @@ const uploadData = asyncErrorHandler(async (req, res) => {
     throw new CustomError(404, "Invalid form id.");
   }
 
-  const organizationId = formExists.organizationId;
-
   const formDataValidation = await validateFormData({
     formFields: formExists.fields,
     data,
@@ -39,7 +37,7 @@ const uploadData = asyncErrorHandler(async (req, res) => {
   }
 
   const submittedData = await formDataService.processUploadData({
-    formData,
+    formData: formDataValidation,
     formId,
     organizationId: formExists.organizationId,
     submittedBy: submittedBy,
@@ -78,7 +76,7 @@ const fetchUploadedFormData = asyncErrorHandler(async (req, res) => {
   });
 });
 
-const fetchFilteredUploadedFormData = asyncErrorHandler(async (req, res) => {});
+const fetchFilteredUploadedFormData = asyncErrorHandler(async () => {});
 
 const formDataController = {
   uploadData,

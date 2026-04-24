@@ -14,5 +14,5 @@ export const config_env = () => {
   }
   dotenv.config({
     path: file
-  })
+  });
 };

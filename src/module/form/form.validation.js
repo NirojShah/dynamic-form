@@ -8,7 +8,7 @@ const checkFormFields = (fields) => {
     const filteredform = [];
     for (let item of fields) {
       if (!item.key || !item.label || !item.type) {
-        console.log(item)
+        console.log(item);
         throw new CustomError(
           500,
           "Please send form required fields - key, lable, type",

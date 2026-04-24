@@ -54,14 +54,13 @@ describe("POST /create-org", () => {
 
 
 describe("PUT /update-org", () => {
-
   let org;
-
   beforeEach(async () => {
     org = await Organization.create({
       organizationName: "Google",
       organizationId: 1,
     });
+    return org;
   });
 
   afterEach(async () => {

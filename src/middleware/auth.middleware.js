@@ -18,7 +18,9 @@ const verifyToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: "Authentication error" });
+    res
+      .status(401)
+      .json({ error: "Authentication error", message: error.message });
   }
 };
 

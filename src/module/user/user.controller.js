@@ -43,10 +43,20 @@ const login = asyncErrorHandler(async (req, res) => {
 
 const updateProfile = asyncErrorHandler(async (req, res) => {
   const { password, email, name } = req.body;
+  return res.status(200).json({
+    password,
+    email,
+    name,
+  });
 });
 
 const deactivateProfile = asyncErrorHandler(async (req, res) => {
   const { userId } = req.user;
+  const resp = await userService.processDeactivateAccount(userId);
+  return res.status(200).json({
+    status: "success",
+    data: resp,
+  });
 });
 
 const createAdminProfile = asyncErrorHandler(async (req, res) => {
@@ -55,6 +65,7 @@ const createAdminProfile = asyncErrorHandler(async (req, res) => {
     name,
     email,
     password,
+    organizationId,
   });
 
   if (resp.success) {
