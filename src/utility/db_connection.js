@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import CustomError from "./customError";
+import CustomError from "./customError.js";
 
 const connectMongo = () => {
   mongoose
