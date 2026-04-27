@@ -31,7 +31,7 @@ const login = asyncErrorHandler(async (req, res) => {
   if (resp.success) {
     res.cookie("token", resp.token, {
       httpOnly: true,
-      secure: true,       // true in production https
+      secure: true, // true in production https
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
@@ -39,6 +39,7 @@ const login = asyncErrorHandler(async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: resp.message,
+      token: resp.token,
     });
   }
 
@@ -88,12 +89,20 @@ const createAdminProfile = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const verifyMe = asyncErrorHandler((req, res) => {
+  return res.status(200).json({
+    status: "success",
+    myInfo: req.user,
+  });
+});
+
 const userController = {
   createUser,
   login,
   updateProfile,
   deactivateProfile,
   createAdminProfile,
+  verifyMe,
 };
 
 export default userController;
