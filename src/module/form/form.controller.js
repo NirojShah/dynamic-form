@@ -54,10 +54,27 @@ const getAllforms = asyncErrorHandler(async (req, res) => {
   throw new CustomError(500, resp.message);
 });
 
+const getformInDetail = asyncErrorHandler(async (req, res) => {
+  const { formId } = req.params;
+  const resp = await formService.processGetFormDetail({ formId });
+  if (resp.success) {
+    return res.status(200).json({
+      status: "success",
+      data: resp.data,
+    });
+  }
+
+  return res.status(50).json({
+    status: "failed",
+    message: resp.message,
+  });
+});
+
 const formController = {
   createForm,
   addFileds,
   getAllforms,
+  getformInDetail,
 };
 
 export default formController;
