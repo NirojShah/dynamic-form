@@ -3,6 +3,7 @@ import cleanDto from "../../utility/clean.input.js";
 import CustomError from "../../utility/customError.js";
 import Organization from "../organization/organization.model.js";
 import User from "./user.model.js";
+import mongoose from "mongoose";
 
 const processSignup = async ({ name, password, email, organizationId }) => {
   const userExists = await User.findOne({
@@ -148,12 +149,54 @@ const processSignupAdmin = async ({ email, password, name }) => {
   };
 };
 
+const loggedInUserDetails = async (userId) => {
+  try {
+    const userDetails = await User.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "organizations",
+          localField: "organization",
+          foreignField: "_id",
+          as: "organization",
+        },
+      },
+      {
+        $unwind: "$organization"
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          organizationName: "$organization.organizationName", 
+          _id: 0
+        },
+      },
+    ]);
+
+    return {
+      success: true,
+      user: userDetails[0],
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const userService = {
   processLogin,
   processSignup,
   processUpdateProfile,
   processDeactivateAccount,
   processSignupAdmin,
+  loggedInUserDetails,
 };
 
 export default userService;
