@@ -1,4 +1,5 @@
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
+import CustomError from "../../utility/customError.js";
 import userService from "./user.service.js";
 
 const createUser = asyncErrorHandler(async (req, res) => {
@@ -89,11 +90,16 @@ const createAdminProfile = asyncErrorHandler(async (req, res) => {
   });
 });
 
-const verifyMe = asyncErrorHandler((req, res) => {
-  return res.status(200).json({
-    status: "success",
-    myInfo: req.user,
-  });
+const verifyMe = asyncErrorHandler(async (req, res) => {
+  const resp = await userService.loggedInUserDetails(req.user.userId);
+
+  if (resp.success) {
+    return res.status(200).json({
+      status: "success",
+      data: resp.user,
+    });
+  }
+  throw new CustomError(500, resp.message);
 });
 
 const userController = {
