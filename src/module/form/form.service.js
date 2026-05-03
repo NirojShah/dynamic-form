@@ -1,8 +1,9 @@
 // service/form.service.js
 
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import SchemaModel from "./form.model.js";
 import CustomError from "../../utility/customError.js";
+import Organization from "../organization/organization.model.js";
 
 const processCreateForm = async ({ name, organizationId, createdBy }) => {
   const form = await SchemaModel.create({
@@ -33,7 +34,28 @@ const processAddFields = async ({ formId, fields, updatedBy }) => {
 
 const processAllForms = async () => {
   try {
-    const forms = await SchemaModel.aggregate([{ $match: {} }]);
+    const forms = await SchemaModel.aggregate([
+      { $match: {} },
+      {
+        $lookup:{
+          from: "organizations",
+          localField: "organizationId",
+          foreignField:"_id",
+          as: "organization"
+        }
+      },
+      {
+        $unwind:"$organization"
+      },
+      {
+        $project: {
+          name: 1,
+          createdBy: 1,
+          organizationName: "$organization.organizationName",
+          description: 1
+        },
+      },
+    ]);
     return {
       success: true,
       data: forms,
@@ -70,11 +92,50 @@ const processGetFormDetail = async ({ formId }) => {
   }
 };
 
+const createFormWithfields = async ({ title, desc, fields, orgId, userId }) => {
+  try {
+    const transformedFields = fields.map((field) => ({
+      key: field.id,
+      label: field.label,
+      type: field.type,
+      placeholder: field.placeholder,
+      required: field.required,
+
+      options: field.options
+        ? field.options.map((opt) => ({
+            label: opt,
+            value: opt,
+          }))
+        : [],
+    }));
+
+    const form = await SchemaModel.create({
+      name: title,
+      description: desc,
+      organizationId: orgId,
+      createdBy: userId,
+      updatedBy: userId,
+      fields: transformedFields,
+    });
+
+    return {
+      success: true,
+      data: form,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
   processAllForms,
   processGetFormDetail,
+  createFormWithfields,
 };
 
 export default formService;
