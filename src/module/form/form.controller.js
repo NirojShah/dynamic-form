@@ -20,6 +20,29 @@ const createForm = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const createFormWithFields = asyncErrorHandler(async (req, res) => {
+  const { fields, title, desc } = req.body;
+
+  const resp = await formService.createFormWithfields({
+    desc,
+    title,
+    fields,
+    orgId: req.user.organizationId,
+    userId: req.user.userId,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      message: "form created successfully.",
+    });
+  }
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+});
+
 const addFileds = asyncErrorHandler(async (req, res) => {
   const { fields, formId } = req.body;
   const userId = req.user.userId;
@@ -46,10 +69,11 @@ const addFileds = asyncErrorHandler(async (req, res) => {
 const getAllforms = asyncErrorHandler(async (req, res) => {
   const orgainzationId = req.user.organizationId;
   const resp = await formService.processAllForms();
+  console.log(resp);
   if (resp.success) {
     return res.status(200).json({
       status: "success",
-      forms: resp.data,
+      data: resp.data,
     });
   }
   throw new CustomError(500, resp.message);
@@ -76,6 +100,7 @@ const formController = {
   addFileds,
   getAllforms,
   getformInDetail,
+  createFormWithFields,
 };
 
 export default formController;
