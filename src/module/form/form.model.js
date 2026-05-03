@@ -11,7 +11,9 @@ const FieldSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+    placeholder: {
+      type: String,
+    },
     type: {
       type: String,
       required: true,
@@ -45,6 +47,10 @@ const SchemaDefinition = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+    },
+
+    description: {
+      type: String,
     },
 
     // Belongs to which organization
