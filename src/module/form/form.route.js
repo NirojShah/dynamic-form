@@ -7,5 +7,6 @@ formRoute.post("/create", formController.createForm);
 formRoute.post("/create-fields", formController.addFileds);
 formRoute.get("/forms", formController.getAllforms);
 formRoute.get("/form-detail/:formId", formController.getformInDetail);
+formRoute.post("/form-fields", formController.createFormWithFields);
 
 export default formRoute;
