@@ -14,6 +14,9 @@ const FieldSchema = new mongoose.Schema(
     placeholder: {
       type: String,
     },
+    helper: {
+      type: String,
+    },
     type: {
       type: String,
       required: true,
