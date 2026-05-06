@@ -4,6 +4,7 @@ import mongoose, { Schema } from "mongoose";
 import SchemaModel from "./form.model.js";
 import CustomError from "../../utility/customError.js";
 import Organization from "../organization/organization.model.js";
+import formUtility from "./form.utility.js";
 
 const processCreateForm = async ({ name, organizationId, createdBy }) => {
   const form = await SchemaModel.create({
@@ -37,22 +38,22 @@ const processAllForms = async () => {
     const forms = await SchemaModel.aggregate([
       { $match: {} },
       {
-        $lookup:{
+        $lookup: {
           from: "organizations",
           localField: "organizationId",
-          foreignField:"_id",
-          as: "organization"
-        }
+          foreignField: "_id",
+          as: "organization",
+        },
       },
       {
-        $unwind:"$organization"
+        $unwind: "$organization",
       },
       {
         $project: {
           name: 1,
           createdBy: 1,
           organizationName: "$organization.organizationName",
-          description: 1
+          description: 1,
         },
       },
     ]);
@@ -130,12 +131,55 @@ const createFormWithfields = async ({ title, desc, fields, orgId, userId }) => {
   }
 };
 
+const processGeneratePublicLink = async ({ name, organizationName }) => {
+  try {
+    const organizationExists = await Organization.findOne({
+      organizationName,
+    });
+
+    if (!organizationExists) {
+      return {
+        success: false,
+        message: "invalid Organization Name.",
+      };
+    }
+    const formExists = await SchemaModel.aggregate([
+      {
+        $match: {
+          name: name,
+          organizationId: organizationExists._id,
+        },
+      },
+    ]);
+    
+    if (formExists.length > 0) {
+      const encryptedId = formUtility.encrypter(formExists[0]._id);
+      return {
+        success: true,
+        data: {
+          url: encryptedId,
+        },
+      };
+    }
+    return {
+      success: false,
+      message: "form not found.",
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
   processAllForms,
   processGetFormDetail,
   createFormWithfields,
+  processGeneratePublicLink,
 };
 
 export default formService;
