@@ -68,7 +68,6 @@ const processLogin = async ({ password, email }) => {
       token: token,
     };
   } catch (err) {
-    console.log(err);
     return {
       status: "failed",
       message: err.message,
