@@ -151,7 +151,7 @@ const processGeneratePublicLink = async ({ name, organizationName }) => {
         },
       },
     ]);
-    
+
     if (formExists.length > 0) {
       const encryptedId = formUtility.encrypter(formExists[0]._id);
       return {
@@ -173,6 +173,30 @@ const processGeneratePublicLink = async ({ name, organizationName }) => {
   }
 };
 
+const processDeleteForm = async ({ key }) => {
+  try {
+    const formId = formUtility.decrypter(key);
+    const formExists = await SchemaModel.findById(formId);
+    if (!formExists) {
+      throw new Error("Form not found.");
+    }
+    formExists.status = "deleted";
+    await formExists.save();
+
+    return {
+      success: true,
+      message: "status changed successfully.",
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
+
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -180,6 +204,7 @@ const formService = {
   processGetFormDetail,
   createFormWithfields,
   processGeneratePublicLink,
+  processDeleteForm,
 };
 
 export default formService;
