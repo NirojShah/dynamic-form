@@ -84,6 +84,11 @@ const SchemaDefinition = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    status: {
+      type: String,
+      enum: ["deleted", "archieve", "draft", "save"],
+      default: "save",
+    },
   },
   {
     timestamps: true,
