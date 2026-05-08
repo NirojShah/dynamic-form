@@ -146,6 +146,21 @@ const getResponse = asyncErrorHandler(async (req, res) => {
   return res.status(500).json({ success: false, message: resp.message });
 });
 
+const deleteForm = asyncErrorHandler(async (req, res) => {
+  const { key } = req.params;
+  const resp = await formService.processDeleteForm({ key });
+  if (resp.success) {
+    return res.status(200).json({
+      status: true,
+      message: resp.message,
+    });
+  }
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+});
+
 const formController = {
   createForm,
   addFileds,
@@ -154,6 +169,7 @@ const formController = {
   createFormWithFields,
   generatePublicLink,
   getResponse,
+  deleteForm,
 };
 
 export default formController;
