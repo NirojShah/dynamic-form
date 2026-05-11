@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import SchemaModel from "../form/form.model";
+import SchemaModel from "../form/form.model.js";
+import SubmittedResponse from "../form-data/form.data.model.js";
 
 const processDashboardCards = async ({ orgId, start, end }) => {
   try {
@@ -42,9 +43,45 @@ const processGetPerformance = async ({ orgId, start, end }) => {
   }
 };
 
-const processGetRecentResponse = async ({ orgId, start, end }) => {
+const processGetRecentResponse = async ({ orgId, limit = 5 }) => {
   try {
-    console.log(orgId, start, end);
+    const recentResp = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: orgId,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+        },
+      },
+    ]);
+
+    const formIds = recentResp.map((val) => val._id);
+
+    const recentForms = await SubmittedResponse.aggregate([
+      {
+        $match: {
+          formId: {
+            $in: formIds,
+          },
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $limit: 5,
+      },
+    ]);
+
+    return {
+      success: true,
+      data: recentForms,
+    };
   } catch (err) {
     return {
       success: false,
