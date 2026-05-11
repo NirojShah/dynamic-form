@@ -100,7 +100,7 @@ const processGetRecentForms = async ({ orgId, limit = 5 }) => {
       },
       {
         $sort: {
-          createdAt: 1,
+          createdAt: -1,
         },
       },
       {
