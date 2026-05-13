@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import SchemaModel from "./form.model.js";
 
 const SECRET = process.env.SECRET_KEY || "my-super-secret-key";
 const algorithm = "aes-256-gcm";
@@ -80,7 +81,25 @@ const decrypter = (encryptedId) => {
   }
 };
 
+const updateOpenedValue = async (formId) => {
+  try {
+    const updateVal = await SchemaModel.findById(formId);
+    if (updateVal) {
+      updateVal.opened = updateVal.opened + 1;
+      await updateVal.save();
+      return true;
+    }
+    return false;
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 export default {
   encrypter,
   decrypter,
+  updateOpenedValue,
 };
