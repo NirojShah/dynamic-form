@@ -139,7 +139,32 @@ const processGetRecentForms = async ({ orgId, limit = 5 }) => {
     const forms = await SchemaModel.aggregate([
       {
         $match: {
-          organizationId: orgId,
+          organizationId: new mongoose.Types.ObjectId(orgId),
+        },
+      },
+      {
+        $lookup: {
+          from: "userresponses",
+          localField: "_id",
+          foreignField: "formId",
+          as: "responses",
+        },
+      },
+      {
+        $addFields: {
+          totalResponse: { $size: "$responses" },
+        },
+      },
+      {
+        $project: {
+          fields: 0,
+          responses: 0,
+          organizationid: 0,
+          createdBy: 0,
+          updatedAt: 0,
+          _id: 0,
+          __v: 0,
+          updatedBy: 0
         },
       },
       {
@@ -148,7 +173,7 @@ const processGetRecentForms = async ({ orgId, limit = 5 }) => {
         },
       },
       {
-        $limit: limit,
+        $limit: 5,
       },
     ]);
 
