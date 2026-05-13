@@ -87,40 +87,70 @@ const processGetPerformance = async ({ orgId, start, end }) => {
   }
 };
 
-const processGetRecentResponse = async ({ orgId, limit = 5 }) => {
+const processGetRecentResponse = async ({
+  orgId,
+  limit = 5,
+}) => {
   try {
-    const recentResp = await SchemaModel.aggregate([
-      {
-        $match: {
-          organizationId: orgId,
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-        },
-      },
-    ]);
-
-    const formIds = recentResp.map((val) => val._id);
-
-    const recentForms = await SubmittedResponse.aggregate([
-      {
-        $match: {
-          formId: {
-            $in: formIds,
+    const recentForms =
+      await SubmittedResponse.aggregate([
+        {
+          $lookup: {
+            from: "schemas",
+            localField: "formId",
+            foreignField: "_id",
+            as: "formInfo",
           },
         },
-      },
-      {
-        $sort: {
-          createdAt: -1,
+
+        {
+          $unwind: "$formInfo",
         },
-      },
-      {
-        $limit: 5,
-      },
-    ]);
+
+        {
+          $match: {
+            "formInfo.organizationId":
+              new mongoose.Types.ObjectId(orgId),
+          },
+        },
+
+        {
+          $project: {
+            _id: 0,
+
+            createdAt: 1,
+
+            formName: "$formInfo.name",
+
+            userName: {
+              $concat: [
+                {
+                  $ifNull: [
+                    "$userResponse.First Name",
+                    "",
+                  ],
+                },
+                " ",
+                {
+                  $ifNull: [
+                    "$userResponse.Last Name",
+                    "",
+                  ],
+                },
+              ],
+            },
+          },
+        },
+
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+        {
+          $limit: limit,
+        },
+      ]);
 
     return {
       success: true,
@@ -164,7 +194,7 @@ const processGetRecentForms = async ({ orgId, limit = 5 }) => {
           updatedAt: 0,
           _id: 0,
           __v: 0,
-          updatedBy: 0
+          updatedBy: 0,
         },
       },
       {
