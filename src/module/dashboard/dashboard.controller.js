@@ -35,7 +35,21 @@ const dashboardRecentforms = asyncErrorHandler(async (req, res) => {
   throw new CustomError(500, resp.message);
 });
 
-const dashboardRecentResponse = asyncErrorHandler(async (req, res) => {});
+const dashboardRecentResponse = asyncErrorHandler(async (req, res) => {
+  const { limit } = req.query && 5;
+  const orgId = req.user.organizationId;
+  const resp = await dashboardService.processGetRecentResponse({
+    orgId,
+    limit,
+  });
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+  throw new CustomError(500, resp.message);
+});
 
 const dashboardController = {
   dashboardCards,
