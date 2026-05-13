@@ -1,6 +1,20 @@
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
+import dashboardService from "./dashboard.service.js";
 
-const dashboardCards = asyncErrorHandler(async (req, res) => {});
+const dashboardCards = asyncErrorHandler(async (req, res) => {
+  const orgId = req.user.organizationId;
+  const resp = await dashboardService.processDashboardCards({ orgId });
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+});
 
 const dashboardResponseAnalytics = asyncErrorHandler(async (req, res) => {});
 
