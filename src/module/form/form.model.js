@@ -86,8 +86,16 @@ const SchemaDefinition = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["deleted", "archieve", "draft", "save"],
-      default: "save",
+      enum: ["deleted", "archieve", "draft", "active"],
+      default: "active",
+    },
+    expectedResponses: {
+      type: Number,
+      default: 100,
+    },
+    opened: {
+      type: Number,
+      default: 0,
     },
   },
   {
