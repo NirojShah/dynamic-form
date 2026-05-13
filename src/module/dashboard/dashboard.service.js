@@ -2,16 +2,60 @@ import mongoose from "mongoose";
 import SchemaModel from "../form/form.model.js";
 import SubmittedResponse from "../form-data/form.data.model.js";
 
-const processDashboardCards = async ({ orgId, start, end }) => {
+const processDashboardCards = async ({ orgId }) => {
   try {
-    console.log(start, end);
+    const objectOrgId = new mongoose.Types.ObjectId(orgId);
+
     const totalForms = await SchemaModel.countDocuments({
-      organizationId: new mongoose.Types.ObjectId(orgId),
+      organizationId: objectOrgId,
     });
+
+    const formIds = await SchemaModel.find(
+      { organizationId: objectOrgId },
+      { _id: 1 },
+    ).lean();
+
+    const filterFormIds = formIds.map((val) => val._id);
+
+    const totalResponses = await SubmittedResponse.countDocuments({
+      formId: { $in: filterFormIds },
+    });
+
+    const activeForms = await SchemaModel.countDocuments({
+      organizationId: objectOrgId,
+      status: "active",
+    });
+
+    const formOpenedResult = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: objectOrgId,
+          status: "active",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalOpened: { $sum: "$opened" },
+        },
+      },
+    ]);
+
+    const totalOpened = formOpenedResult[0]?.totalOpened || 0;
+
+    const headers = {
+      totalForms,
+      totalResponses,
+      activeForms,
+      totalOpened,
+      conversion: totalOpened > 0 ? (totalResponses / totalOpened) * 100 : 0,
+    };
 
     return {
       success: true,
-      totalforms: totalForms,
+      data: {
+        headers,
+      },
     };
   } catch (err) {
     return {
