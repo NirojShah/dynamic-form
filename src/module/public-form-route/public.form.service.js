@@ -28,12 +28,13 @@ const processGetPublicForm = async ({ key }) => {
         name: 1,
         description: 1,
         formId: key,
-        _id:0
+        _id: 0,
       },
     },
   ]);
 
   if (formExists.length > 0) {
+    await formUtility.updateOpenedValue(decryptedKey);
     return {
       success: true,
       data: formExists[0],
