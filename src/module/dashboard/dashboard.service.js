@@ -65,9 +65,95 @@ const processDashboardCards = async ({ orgId }) => {
   }
 };
 
-const processGetResponseAnalytics = async ({ orgId, start, end }) => {
+const processGetResponseAnalytics = async ({ orgId, today }) => {
   try {
-    console.log(orgId, start, end);
+    // TODAY DATE
+    const currentDate = today ? new Date(today) : new Date();
+
+    // LAST 7 DAYS START
+    const startDate = new Date(currentDate);
+    startDate.setDate(currentDate.getDate() - 6);
+
+    startDate.setHours(0, 0, 0, 0);
+
+    // END OF TODAY
+    const endDate = new Date(currentDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    // FETCH FORM IDS
+    const forms = await SchemaModel.find(
+      {
+        organizationId: new mongoose.Types.ObjectId(orgId),
+      },
+      {
+        _id: 1,
+      },
+    );
+
+    const formIds = forms.map((f) => f._id);
+
+    const analytics = await SubmittedResponse.aggregate([
+      {
+        $match: {
+          formId: {
+            $in: formIds,
+          },
+
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+
+          responses: {
+            $sum: 1,
+          },
+        },
+      },
+
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+
+    const finalData = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(currentDate);
+
+      d.setDate(currentDate.getDate() - i);
+
+      const fullDate = d.toISOString().split("T")[0];
+
+      const found = analytics.find((a) => a._id === fullDate);
+
+      finalData.push({
+        day: d.toLocaleDateString("en-US", {
+          weekday: "short",
+        }),
+
+        date: fullDate,
+
+        responses: found ? found.responses : 0,
+      });
+    }
+
+    return {
+      success: true,
+      data: finalData,
+    };
   } catch (error) {
     return {
       success: false,
@@ -87,70 +173,59 @@ const processGetPerformance = async ({ orgId, start, end }) => {
   }
 };
 
-const processGetRecentResponse = async ({
-  orgId,
-  limit = 5,
-}) => {
+const processGetRecentResponse = async ({ orgId, limit = 5 }) => {
   try {
-    const recentForms =
-      await SubmittedResponse.aggregate([
-        {
-          $lookup: {
-            from: "schemas",
-            localField: "formId",
-            foreignField: "_id",
-            as: "formInfo",
+    const recentForms = await SubmittedResponse.aggregate([
+      {
+        $lookup: {
+          from: "schemas",
+          localField: "formId",
+          foreignField: "_id",
+          as: "formInfo",
+        },
+      },
+
+      {
+        $unwind: "$formInfo",
+      },
+
+      {
+        $match: {
+          "formInfo.organizationId": new mongoose.Types.ObjectId(orgId),
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+
+          createdAt: 1,
+
+          formName: "$formInfo.name",
+
+          userName: {
+            $concat: [
+              {
+                $ifNull: ["$userResponse.First Name", ""],
+              },
+              " ",
+              {
+                $ifNull: ["$userResponse.Last Name", ""],
+              },
+            ],
           },
         },
+      },
 
-        {
-          $unwind: "$formInfo",
+      {
+        $sort: {
+          createdAt: -1,
         },
-
-        {
-          $match: {
-            "formInfo.organizationId":
-              new mongoose.Types.ObjectId(orgId),
-          },
-        },
-
-        {
-          $project: {
-            _id: 0,
-
-            createdAt: 1,
-
-            formName: "$formInfo.name",
-
-            userName: {
-              $concat: [
-                {
-                  $ifNull: [
-                    "$userResponse.First Name",
-                    "",
-                  ],
-                },
-                " ",
-                {
-                  $ifNull: [
-                    "$userResponse.Last Name",
-                    "",
-                  ],
-                },
-              ],
-            },
-          },
-        },
-
-        {
-          $sort: {
-            createdAt: -1,
-          },
-        },
-        {
-          $limit: limit,
-        },
-      ]);
+      },
+      {
+        $limit: limit,
+      },
+    ]);
 
     return {
       success: true,
