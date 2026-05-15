@@ -162,9 +162,79 @@ const processGetResponseAnalytics = async ({ orgId, today }) => {
   }
 };
 
-const processGetPerformance = async ({ orgId, start, end }) => {
+const processGetPerformance = async ({ orgId }) => {
   try {
-    console.log(orgId, start, end);
+    // TOTAL FORMS
+    const totalForms = await SchemaModel.countDocuments({
+      organizationId: new mongoose.Types.ObjectId(orgId),
+    });
+
+    // ACTIVE FORMS
+    const activeForms = await SchemaModel.countDocuments({
+      organizationId: new mongoose.Types.ObjectId(orgId),
+      status: "active",
+    });
+
+    // GET FORM IDS
+    const forms = await SchemaModel.find(
+      {
+        organizationId: new mongoose.Types.ObjectId(orgId),
+      },
+      {
+        _id: 1,
+        opened: 1,
+      },
+    );
+
+    const formIds = forms.map((f) => f._id);
+
+    // TOTAL RESPONSES
+    const totalResponses = await SubmittedResponse.countDocuments({
+      formId: {
+        $in: formIds,
+      },
+    });
+
+    // TOTAL FORM OPENS
+    const totalFormViews = forms.reduce(
+      (acc, curr) => acc + (curr.opened || 0),
+      0,
+    );
+
+    // AVG RESPONSES / FORM
+    const avgResponsesPerForm =
+      totalForms > 0 ? (totalResponses / totalForms).toFixed(1) : 0;
+
+    // ACTIVE FORM %
+    const activeFormsPercentage =
+      totalForms > 0 ? ((activeForms / totalForms) * 100).toFixed(0) : 0;
+
+    // COMPLETION RATE
+    const completionRate =
+      totalFormViews > 0
+        ? ((totalResponses / totalFormViews) * 100).toFixed(0)
+        : 0;
+
+    return {
+      success: true,
+
+      data: [
+        {
+          title: "Completion Rate",
+          value: `${completionRate}%`,
+        },
+
+        {
+          title: "Avg Responses / Form",
+          value: avgResponsesPerForm,
+        },
+
+        {
+          title: "Active Forms",
+          value: `${activeFormsPercentage}%`,
+        },
+      ],
+    };
   } catch (err) {
     return {
       success: false,
