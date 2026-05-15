@@ -40,7 +40,26 @@ const dashboardResponseAnalytics = asyncErrorHandler(async (req, res) => {
   });
 });
 
-const dashboardPerformance = asyncErrorHandler(async (req, res) => {});
+const dashboardPerformance = asyncErrorHandler(async (req, res) => {
+  const organizationId = req.user.organizationId;
+
+  const resp = await dashboardService.processGetPerformance({
+    orgId: organizationId,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+  
+});
 
 const dashboardRecentforms = asyncErrorHandler(async (req, res) => {
   const orgId = req.user.organizationId;
