@@ -69,7 +69,6 @@ const addFileds = asyncErrorHandler(async (req, res) => {
 });
 
 const getAllforms = asyncErrorHandler(async (req, res) => {
-  const orgainzationId = req.user.organizationId;
   const resp = await formService.processAllForms();
   if (resp.success) {
     return res.status(200).json({
