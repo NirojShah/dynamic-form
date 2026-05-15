@@ -348,7 +348,7 @@ const processGetRecentForms = async ({ orgId, limit = 5 }) => {
         },
       },
       {
-        $limit: 5,
+        $limit: limit,
       },
     ]);
 
