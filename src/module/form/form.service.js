@@ -33,10 +33,14 @@ const processAddFields = async ({ formId, fields, updatedBy }) => {
   return form;
 };
 
-const processAllForms = async () => {
+const processAllForms = async ({ orgId }) => {
   try {
     const forms = await SchemaModel.aggregate([
-      { $match: {} },
+      {
+        $match: {
+          organizationId: new mongoose.Types.ObjectId(orgId),
+        },
+      },
       {
         $lookup: {
           from: "organizations",
