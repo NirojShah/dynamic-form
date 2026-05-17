@@ -43,13 +43,19 @@ const processDashboardCards = async ({ orgId }) => {
 
     const totalOpened = formOpenedResult[0]?.totalOpened || 0;
 
-    const headers = {
-      totalForms,
-      totalResponses,
-      activeForms,
-      totalOpened,
-      conversion: totalOpened > 0 ? (totalResponses / totalOpened) * 100 : 0,
-    };
+    const headers = [
+      { label: "Total Forms", value: totalForms },
+      { label: "Responses", value: totalResponses },
+      { label: "Active Forms", value: activeForms },
+      // { label: "Total Opened", value: totalOpened },
+      {
+        label: "Conversion",
+        value:
+          totalOpened > 0
+            ? `${((totalResponses / totalOpened) * 100).toFixed(2)}%`
+            : 0,
+      },
+    ];
 
     return {
       success: true,
@@ -267,13 +273,10 @@ const processGetRecentResponse = async ({ orgId, limit = 5 }) => {
 
       {
         $project: {
-          _id: 0,
-
+          _id: 1,
           createdAt: 1,
-
-          formName: "$formInfo.name",
-
-          userName: {
+          form: "$formInfo.name",
+          user: {
             $concat: [
               {
                 $ifNull: ["$userResponse.First Name", ""],
@@ -332,14 +335,10 @@ const processGetRecentForms = async ({ orgId, limit = 5 }) => {
       },
       {
         $project: {
-          fields: 0,
-          responses: 0,
-          organizationid: 0,
-          createdBy: 0,
-          updatedAt: 0,
-          _id: 0,
-          __v: 0,
-          updatedBy: 0,
+          name: "$name",
+          id: "$_id",
+          responses: "$totalResponse",
+          status: "$status",
         },
       },
       {
