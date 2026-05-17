@@ -199,6 +199,36 @@ const processDeleteForm = async ({ key }) => {
   }
 };
 
+const processGetPublicForms = async ({ page = 1, limit = 10 }) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    const forms = await SchemaModel.aggregate([
+      {
+        $match: {
+          public: true,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    return {
+      success: true,
+      data: forms,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -207,6 +237,7 @@ const formService = {
   createFormWithfields,
   processGeneratePublicLink,
   processDeleteForm,
+  processGetPublicForms,
 };
 
 export default formService;
