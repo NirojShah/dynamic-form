@@ -8,7 +8,6 @@ import dashboardRoute from "../module/dashboard/dashboard.route.js";
 import userorgRouter from "../module/user-org/user-org.route.js";
 
 const applicationRouter = Router();
-
 applicationRouter.use("/user", userRoute);
 applicationRouter.use("/public", publicFormRoute);
 applicationRouter.use(verifyToken);
