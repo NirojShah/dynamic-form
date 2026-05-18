@@ -201,25 +201,103 @@ const processDeleteForm = async ({ key }) => {
 
 const processGetPublicForms = async ({ page = 1, limit = 10 }) => {
   try {
-    const skip = (page - 1) * limit;
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
 
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Get total count
+    const totalForms = await SchemaModel.countDocuments({
+      public: true,
+      organizationId: null,
+    });
+
+    // Get paginated forms
     const forms = await SchemaModel.aggregate([
       {
         $match: {
           public: true,
+          organizationId: null,
+        },
+      },
+      {
+        $project: {
+          id: formUtility.encrypter("$_id"),
+          _id: 0,
+          name: "$name",
+          description: "$description",
         },
       },
       {
         $skip: skip,
       },
       {
-        $limit: limit,
+        $limit: limitNumber,
       },
     ]);
 
     return {
       success: true,
       data: forms,
+      pagination: {
+        currentPage: pageNumber,
+        limit: limitNumber,
+        totalItems: totalForms,
+        totalPages: Math.ceil(totalForms / limitNumber),
+        hasNextPage: pageNumber < Math.ceil(totalForms / limitNumber),
+        hasPreviousPage: pageNumber > 1,
+      },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
+const processPublicFormCreation = async ({ organization, formName }) => {
+  try {
+    const organizationExists = await Organization.findOne({
+      organizationName: organization,
+    });
+
+    if (!organizationExists) {
+      return {
+        success: false,
+        message: "Invalid Organization Name.",
+      };
+    }
+
+    const formExists = await SchemaModel.findOne({
+      name: formName,
+      organizationId: organizationExists._id,
+    });
+
+    if (!formExists) {
+      return {
+        success: false,
+        message: "Form not found.",
+      };
+    }
+
+    // Convert mongoose document to plain object
+    const formCopy = formExists.toObject();
+
+    // Remove fields you don't want duplicated
+    delete formCopy._id;
+    delete formCopy.organizationId;
+
+    // Optional: rename copied form
+    formCopy.name = `${formCopy.name} Template.`;
+    formCopy.public = true;
+
+    // Create new form
+    await SchemaModel.create(formCopy);
+
+    return {
+      success: true,
+      message: "Form copied successfully",
     };
   } catch (err) {
     return {
@@ -238,6 +316,7 @@ const formService = {
   processGeneratePublicLink,
   processDeleteForm,
   processGetPublicForms,
+  processPublicFormCreation,
 };
 
 export default formService;

@@ -60,7 +60,7 @@ const SchemaDefinition = new mongoose.Schema(
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Organization",
-      required: true,
+      // required: true,
     },
 
     // Created by which user
