@@ -81,8 +81,9 @@ const getAllforms = asyncErrorHandler(async (req, res) => {
 });
 
 const getformInDetail = asyncErrorHandler(async (req, res) => {
-  const { formId } = req.params;
-  const resp = await formService.processGetFormDetail({ formId });
+  const { key } = req.params;
+  const decryptedKey = formUtility.decrypter(key);
+  const resp = await formService.processGetFormDetail({ formId: decryptedKey });
   if (resp.success) {
     return res.status(200).json({
       status: "success",
@@ -161,6 +162,45 @@ const deleteForm = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const getPublicForms = asyncErrorHandler(async (req, res) => {
+  const { page, limit } = req.query;
+  const resp = await formService.processGetPublicForms({ page, limit });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+      pagination: resp.pagination,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+});
+
+const createPublicForm = asyncErrorHandler(async (req, res) => {
+  const { title, organization } = req.body;
+
+  const resp = await formService.processPublicFormCreation({
+    formName: title,
+    organization,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      message: "Public Form Created",
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+});
+
 const formController = {
   createForm,
   addFileds,
@@ -170,6 +210,8 @@ const formController = {
   generatePublicLink,
   getResponse,
   deleteForm,
+  getPublicForms,
+  createPublicForm,
 };
 
 export default formController;
