@@ -199,6 +199,7 @@ const createPublicForm = asyncErrorHandler(async (req, res) => {
     success: false,
     message: resp.message,
   });
+  }
 });
 
 const formController = {
