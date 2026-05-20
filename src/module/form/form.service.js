@@ -73,16 +73,29 @@ const processAllForms = async ({ orgId }) => {
   }
 };
 
-const processGetFormDetail = async ({ formId }) => {
+const processGetFormDetail = async ({ organizationName, formName }) => {
   try {
+    const organizaitonExists = await Organization.findOne({
+      organizationName: organizationName,
+    });
+
+    if (!organizaitonExists) {
+      return {
+        success: false,
+        message: "Organizaiton not found.",
+      };
+    }
+    
     const formExists = await SchemaModel.aggregate([
       {
         $match: {
-          _id: mongoose.Types.ObjectId(formId),
+          name: formName,
+          organizationId: organizaitonExists._id,
         },
       },
     ]);
-    if (formExists.length() > 0) {
+
+    if (formExists.length > 0) {
       return {
         success: true,
         data: formExists[0],

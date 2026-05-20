@@ -81,9 +81,11 @@ const getAllforms = asyncErrorHandler(async (req, res) => {
 });
 
 const getformInDetail = asyncErrorHandler(async (req, res) => {
-  const { key } = req.params;
-  const decryptedKey = formUtility.decrypter(key);
-  const resp = await formService.processGetFormDetail({ formId: decryptedKey });
+  const { formName, organization } = req.params;
+  const resp = await formService.processGetFormDetail({
+    formName,
+    organizationName: organization,
+  });
   if (resp.success) {
     return res.status(200).json({
       status: "success",
@@ -91,7 +93,7 @@ const getformInDetail = asyncErrorHandler(async (req, res) => {
     });
   }
 
-  return res.status(50).json({
+  return res.status(500).json({
     status: "failed",
     message: resp.message,
   });
