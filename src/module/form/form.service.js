@@ -85,7 +85,6 @@ const processGetFormDetail = async ({ organizationName, formName }) => {
         message: "Organizaiton not found.",
       };
     }
-    
     const formExists = await SchemaModel.aggregate([
       {
         $match: {
@@ -320,6 +319,66 @@ const processPublicFormCreation = async ({ organization, formName }) => {
   }
 };
 
+const processUpdateForm = async ({
+  title,
+  organizationId,
+  fields,
+  initialName,
+  description,
+}) => {
+  try {
+    const organizationExists = await Organization.findById(organizationId);
+
+    if (!organizationExists) {
+      return {
+        success: false,
+        message: "organization not found.",
+      };
+    }
+
+    const formInfo = await SchemaModel.findOne({
+      name: initialName,
+      organizationId: new mongoose.Types.ObjectId(organizationId),
+    });
+
+    if (!formInfo) {
+      throw new Error("form not found.");
+    }
+
+    const transformedFields = fields.map((field) => ({
+      key: field.id,
+      label: field.label,
+      type: field.type,
+      placeholder: field.placeholder,
+      required: field.required,
+
+      options: field.options
+        ? field.options.map((opt) => ({
+            label: opt,
+            value: opt,
+          }))
+        : [],
+    }));
+
+    formInfo.name = title;
+    formInfo.description = description;
+    formInfo.fields = transformedFields;
+
+    await formInfo.save();
+
+    return {
+      success: true,
+      message: "successfully updated the form.",
+      data: formInfo,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -330,6 +389,7 @@ const formService = {
   processDeleteForm,
   processGetPublicForms,
   processPublicFormCreation,
+  processUpdateForm,
 };
 
 export default formService;

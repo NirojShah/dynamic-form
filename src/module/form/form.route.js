@@ -13,5 +13,6 @@ formRoute.delete("/:key", formController.deleteForm);
 formRoute.get("/public", formController.getPublicForms);
 formRoute.put("/public", formController.createPublicForm);
 formRoute.get("/:formName/:organization", formController.getformInDetail);
+formRoute.put("/update", formController.updateForm);
 
 export default formRoute;

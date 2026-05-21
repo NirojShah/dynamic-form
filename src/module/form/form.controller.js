@@ -201,7 +201,29 @@ const createPublicForm = asyncErrorHandler(async (req, res) => {
     success: false,
     message: resp.message,
   });
+});
+
+const updateForm = asyncErrorHandler(async (req, res) => {
+  const { fields, title, initialname, description } = req.body;
+  const { organizationId } = req.user;
+
+  const resp = await formService.processUpdateForm({
+    title,
+    fields,
+    organizationId,
+    description,
+    initialName: initialname,
+  });
+
+  if (!resp.success) {
+    throw new CustomError(500, resp.message);
   }
+
+  return res.status(201).json({
+    success: true,
+    message: resp.message,
+    data: resp.data,
+  });
 });
 
 const formController = {
@@ -215,6 +237,7 @@ const formController = {
   deleteForm,
   getPublicForms,
   createPublicForm,
+  updateForm,
 };
 
 export default formController;
