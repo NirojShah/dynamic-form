@@ -379,6 +379,44 @@ const processUpdateForm = async ({
   }
 };
 
+const processFetchArchievedForms = async ({ organizationId }) => {
+  try {
+    const archievedForms = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: new mongoose.Types.ObjectId(organizationId),
+          status: "archieve",
+        },
+      },
+      {
+        $lookup: {
+          from: "organizations",
+          localField: "organizationId",
+          foreignField: "_id",
+          as: "organization",
+        },
+      },
+
+      {
+        $project: {
+          title: "$name",
+          organization: "$organization",
+        },
+      },
+    ]);
+
+    return {
+      success: true,
+      data: archievedForms,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -390,6 +428,7 @@ const formService = {
   processGetPublicForms,
   processPublicFormCreation,
   processUpdateForm,
+  processFetchArchievedForms,
 };
 
 export default formService;

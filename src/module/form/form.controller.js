@@ -226,6 +226,26 @@ const updateForm = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const archievedForms = asyncErrorHandler(async (req, res) => {
+  const { organizationId } = req.user;
+
+  const resp = await formService.processFetchArchievedForms({ organizationId });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    messge: resp.message,
+  });
+});
+
+const markAsArchieved = asyncErrorHandler(async (req, res) => {});
+
 const formController = {
   createForm,
   addFileds,
@@ -238,6 +258,8 @@ const formController = {
   getPublicForms,
   createPublicForm,
   updateForm,
+  archievedForms,
+  markAsArchieved,
 };
 
 export default formController;
