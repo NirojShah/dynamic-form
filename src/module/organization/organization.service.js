@@ -25,13 +25,14 @@ const processCreateOrg = async ({ organizationName }) => {
 
   const orgId = await organizationIdGenerator();
 
-  await Organization.create({
+  const organization = await Organization.create({
     organizationName,
     organizationId: orgId,
   });
 
   return {
     success: true,
+    organizationId: organization._id,
     message: "organization created successfully.",
   };
 };
@@ -70,7 +71,6 @@ const processGetOrganizations = async ({ page = 1, limit = 10 }) => {
       currentPage: page,
       totalPages: Math.ceil(total / limit),
     };
-
   } catch (err) {
     return {
       success: false,

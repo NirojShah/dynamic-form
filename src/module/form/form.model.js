@@ -11,7 +11,12 @@ const FieldSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+    placeholder: {
+      type: String,
+    },
+    helper: {
+      type: String,
+    },
     type: {
       type: String,
       required: true,
@@ -47,11 +52,15 @@ const SchemaDefinition = new mongoose.Schema(
       required: true,
     },
 
+    description: {
+      type: String,
+    },
+
     // Belongs to which organization
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Organization",
-      required: true,
+      // required: true,
     },
 
     // Created by which user
@@ -75,6 +84,23 @@ const SchemaDefinition = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    status: {
+      type: String,
+      enum: ["deleted", "archieve", "draft", "active"],
+      default: "active",
+    },
+    expectedResponses: {
+      type: Number,
+      default: 100,
+    },
+    opened: {
+      type: Number,
+      default: 0,
+    },
+    public:{
+      type: Boolean,
+      default: false
+    }
   },
   {
     timestamps: true,

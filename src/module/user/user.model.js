@@ -14,13 +14,13 @@ const UserModel = new Schema({
     required: [true, "Password is required."],
   },
   organization: {
-    type: Schema.ObjectId,
-    ref: "Users",
+    type: Schema.Types.ObjectId,
+    ref: "Organization",
     required: [true, "Organization is required."],
   },
-  role:{
+  role: {
     type: [],
-  }
+  },
 });
 
 const User = model("Users", UserModel);
