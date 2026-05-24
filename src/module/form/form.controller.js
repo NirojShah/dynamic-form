@@ -244,7 +244,27 @@ const archievedForms = asyncErrorHandler(async (req, res) => {
   });
 });
 
-const markAsArchieved = asyncErrorHandler(async (req, res) => {});
+const markAsArchieved = asyncErrorHandler(async (req, res) => {
+  const { title } = req.body;
+  const { organizationId } = req.user;
+  
+  const resp = await formService.processMarkAsArchive({
+    title,
+    organizationId,
+  });
+
+  if (!resp.success) {
+    return res.status(500).json({
+      success: false,
+      message: resp.message,
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "successfully marked as archieved.",
+  });
+});
 
 const formController = {
   createForm,

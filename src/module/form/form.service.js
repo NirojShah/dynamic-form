@@ -398,9 +398,14 @@ const processFetchArchievedForms = async ({ organizationId }) => {
       },
 
       {
+        $unwind: "$organization",
+      },
+
+      {
         $project: {
-          title: "$name",
-          organization: "$organization",
+          name: "$name",
+          organizationName: "$organization.organizationName",
+          description: "$description",
         },
       },
     ]);
@@ -408,6 +413,34 @@ const processFetchArchievedForms = async ({ organizationId }) => {
     return {
       success: true,
       data: archievedForms,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
+const processMarkAsArchive = async ({ title, organizationId }) => {
+  try {
+    const form = await SchemaModel.findOne({
+      name: title,
+      organizationId: new mongoose.Types.ObjectId(organizationId),
+    });
+    if (!form) {
+      return {
+        success: false,
+        message: "form not found.",
+      };
+    }
+
+    form.status = "archieve";
+    await form.save();
+
+    return {
+      success: true,
+      message: "successfully changed status.",
     };
   } catch (err) {
     return {
@@ -429,6 +462,7 @@ const formService = {
   processPublicFormCreation,
   processUpdateForm,
   processFetchArchievedForms,
+  processMarkAsArchive,
 };
 
 export default formService;
