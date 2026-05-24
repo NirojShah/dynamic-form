@@ -15,5 +15,6 @@ formRoute.put("/public", formController.createPublicForm);
 formRoute.get("/:formName/:organization", formController.getformInDetail);
 formRoute.put("/update", formController.updateForm);
 formRoute.get("/archieved", formController.archievedForms);
+formRoute.patch("/archive", formController.markAsArchieved);
 
 export default formRoute;
