@@ -83,6 +83,7 @@ const organizationService = {
   processCreateOrg,
   processUpdateOrg,
   processGetOrganizations,
+  organizationIdGenerator,
 };
 
 export default organizationService;
