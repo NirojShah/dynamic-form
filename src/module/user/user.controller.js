@@ -102,6 +102,28 @@ const verifyMe = asyncErrorHandler(async (req, res) => {
   throw new CustomError(500, resp.message);
 });
 
+const updatePassword = asyncErrorHandler(async (req, res) => {
+  const { curPass, newPass } = req.body;
+
+  const resp = await userService.processUpdatePassword({
+    currentPassword: curPass,
+    newPassword: newPass,
+    userId: req.user.userId,
+  });
+
+  if (!resp.success) {
+    return res.status(500).json({
+      success: false,
+      message: resp.message,
+    });
+  }
+
+  return res.status(201).json({
+    success: true,
+    message: resp.message,
+  });
+});
+
 const userController = {
   createUser,
   login,
@@ -109,6 +131,7 @@ const userController = {
   deactivateProfile,
   createAdminProfile,
   verifyMe,
+  updatePassword,
 };
 
 export default userController;
