@@ -165,14 +165,14 @@ const loggedInUserDetails = async (userId) => {
         },
       },
       {
-        $unwind: "$organization"
+        $unwind: "$organization",
       },
       {
         $project: {
           name: 1,
           email: 1,
-          organizationName: "$organization.organizationName", 
-          _id: 0
+          organizationName: "$organization.organizationName",
+          _id: 0,
         },
       },
     ]);
@@ -189,6 +189,38 @@ const loggedInUserDetails = async (userId) => {
   }
 };
 
+const processUpdatePassword = async ({
+  currentPassword,
+  newPassword,
+  userId,
+}) => {
+  try {
+    const userInfo = await User.findOne({
+      _id: userId,
+    });
+
+    if (userInfo.password != currentPassword) {
+      return {
+        success: false,
+        message: "current password doesn't match.",
+      };
+    }
+
+    userInfo.password = newPassword;
+    await userInfo.save();
+
+    return {
+      success: false,
+      message: "successfully updated password.",
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const userService = {
   processLogin,
   processSignup,
@@ -196,6 +228,7 @@ const userService = {
   processDeactivateAccount,
   processSignupAdmin,
   loggedInUserDetails,
+  processUpdatePassword
 };
 
 export default userService;
