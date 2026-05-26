@@ -10,5 +10,6 @@ userRoute.post("/admin/signup", userController.createAdminProfile);
 userRoute.post("/signup", verifyToken, userController.createUser);
 userRoute.put("/deactivate", verifyToken, userController.deactivateProfile);
 userRoute.put("/update-profile", verifyToken, userController.updateProfile);
+userRoute.put("/update/password", verifyToken, userController.updatePassword);
 
 export default userRoute;
