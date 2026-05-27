@@ -4,15 +4,16 @@ import cookieParser from "cookie-parser";
 import globalErrorHandler from "../utility/globalErrorHandler.js";
 import applicationRouter from "./application.route.js";
 import fileUpload from "express-fileupload";
+import { config_env } from "../../environment_setup.js";
+
+config_env();
+
+const origins = process.env.origin;
 
 const app = express();
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://192.168.220.1:5173",
-      "http://192.168.11.1:5173/",
-    ],
+    origin: [...origins.split(",")],
     credentials: true,
   }),
 );
