@@ -38,14 +38,14 @@ const login = asyncErrorHandler(async (req, res) => {
     });
 
     return res.status(200).json({
-      status: "success",
+      success: true,
       message: resp.message,
       token: resp.token,
     });
   }
 
   return res.status(403).json({
-    status: "failed",
+    success: false,
     message: resp.message,
   });
 });
