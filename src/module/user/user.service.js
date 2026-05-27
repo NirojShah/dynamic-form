@@ -172,6 +172,7 @@ const loggedInUserDetails = async (userId) => {
           name: 1,
           email: 1,
           organizationName: "$organization.organizationName",
+          orgId: "$organization.organizationId",
           _id: 0,
         },
       },
@@ -228,7 +229,7 @@ const userService = {
   processDeactivateAccount,
   processSignupAdmin,
   loggedInUserDetails,
-  processUpdatePassword
+  processUpdatePassword,
 };
 
 export default userService;
