@@ -1,9 +1,10 @@
-import { Types } from "mongoose";
-import SubmittedResponse from "./form.data.model.js";
+import mongoose, { Schema, Types } from "mongoose";
 import fileService from "../file-storage/file.storage.service.js";
 import SchemaModel from "../form/form.model.js";
+import formDataUtility from "./form.data.utility.js";
+import SubmittedResponse from "./form.data.model.js";
 
-const processUploadResponse = async ({ formId, data }) => {
+const processUploadResponse = async ({ formId, orgId, data }) => {
   try {
     const userResponse = {};
 
@@ -22,16 +23,25 @@ const processUploadResponse = async ({ formId, data }) => {
       }
     }
 
-    await SubmittedResponse.create({
-      formId: new Types.ObjectId(formId),
-      userResponse,
+    const insertData = await formDataUtility.createTemplateResponseSchema({
+      templateId: formId,
+      formData: userResponse,
+      orgId: orgId,
     });
 
-    return { success: true, message: "Response submitted successfully." };
+    if (insertData.success) {
+      return { success: true, message: "Response submitted successfully." };
+    }
+
+    return {
+      success: false,
+      message: insertData.message,
+    };
   } catch (err) {
     return { success: false, message: err.message };
   }
 };
+
 
 const processGetUserResponse = async (formId, page = 1, limit = 10) => {
   try {
