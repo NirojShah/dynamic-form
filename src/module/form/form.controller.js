@@ -130,11 +130,12 @@ const getResponse = asyncErrorHandler(async (req, res) => {
 
   const formId = formUtility.decrypter(key);
 
-  const resp = await formDataService.processGetUserResponse(
+  const resp = await formDataService.processGetUserResponse({
     formId,
     page,
     limit,
-  );
+    organizationId: req.user.organizationId,
+  });
 
   if (resp.success) {
     return res.status(200).json({
@@ -247,7 +248,6 @@ const archievedForms = asyncErrorHandler(async (req, res) => {
 const markAsArchieved = asyncErrorHandler(async (req, res) => {
   const { title } = req.body;
   const { organizationId } = req.user;
-  
   const resp = await formService.processMarkAsArchive({
     title,
     organizationId,
