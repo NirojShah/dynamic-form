@@ -93,14 +93,18 @@ const SchemaDefinition = new mongoose.Schema(
       type: Number,
       default: 100,
     },
+    responseCount: {
+      type: Number,
+      default: 0,
+    },
     opened: {
       type: Number,
       default: 0,
     },
-    public:{
+    public: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   {
     timestamps: true,
