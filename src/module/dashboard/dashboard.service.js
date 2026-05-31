@@ -84,20 +84,19 @@ const processDashboardCards = async ({ orgId }) => {
 
 const processGetResponseAnalytics = async ({ orgId, today }) => {
   try {
-    // TODAY DATE
+    // TODAY
     const currentDate = today ? new Date(today) : new Date();
 
     // LAST 7 DAYS START
     const startDate = new Date(currentDate);
     startDate.setDate(currentDate.getDate() - 6);
-
     startDate.setHours(0, 0, 0, 0);
 
-    // END OF TODAY
+    // TODAY END
     const endDate = new Date(currentDate);
     endDate.setHours(23, 59, 59, 999);
 
-    // FETCH FORM IDS
+    // FETCH FORMS
     const forms = await SchemaModel.find(
       {
         organizationId: new mongoose.Types.ObjectId(orgId),
@@ -105,65 +104,88 @@ const processGetResponseAnalytics = async ({ orgId, today }) => {
       {
         _id: 1,
       },
-    );
+    ).lean();
 
-    const formIds = forms.map((f) => f._id);
+    // RUN AGGREGATION ON ALL FORM COLLECTIONS
+    const results = await Promise.all(
+      forms.map(async (form) => {
+        const collectionName = `${form._id}-${orgId}`;
 
-    const analytics = await SubmittedResponse.aggregate([
-      {
-        $match: {
-          formId: {
-            $in: formIds,
-          },
+        // skip if collection not created yet
+        const exists = await mongoose.connection.db
+          .listCollections({
+            name: collectionName,
+          })
+          .toArray();
 
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
+        if (!exists.length) return [];
 
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$createdAt",
+        const ResponseModel =
+          mongoose.models[collectionName] ||
+          mongoose.model(
+            collectionName,
+            new mongoose.Schema(
+              {},
+              {
+                strict: false,
+                timestamps: true,
+              },
+            ),
+            collectionName,
+          );
+
+        return ResponseModel.aggregate([
+          {
+            $match: {
+              createdAt: {
+                $gte: startDate,
+                $lte: endDate,
+              },
             },
           },
-
-          responses: {
-            $sum: 1,
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt",
+                },
+              },
+              responses: {
+                $sum: 1,
+              },
+            },
           },
-        },
-      },
+        ]);
+      }),
+    );
 
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
+    // MERGE ALL COLLECTION RESULTS
+    const merged = {};
 
+    results.flat().forEach((item) => {
+      if (!merged[item._id]) {
+        merged[item._id] = 0;
+      }
+
+      merged[item._id] += item.responses;
+    });
+
+    // BUILD 7 DAY DATA
     const finalData = [];
 
     for (let i = 6; i >= 0; i--) {
       const d = new Date(currentDate);
-
       d.setDate(currentDate.getDate() - i);
 
       const fullDate = d.toISOString().split("T")[0];
-
-      const found = analytics.find((a) => a._id === fullDate);
 
       finalData.push({
         day: d.toLocaleDateString("en-US", {
           weekday: "short",
         }),
-
         date: fullDate,
-
-        responses: found ? found.responses : 0,
+        responses: merged[fullDate] || 0,
       });
     }
 
@@ -174,7 +196,7 @@ const processGetResponseAnalytics = async ({ orgId, today }) => {
   } catch (error) {
     return {
       success: false,
-      messge: error.message,
+      message: error.message,
     };
   }
 };
