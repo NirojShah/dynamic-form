@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import SchemaModel from "../form/form.model.js";
-import SubmittedResponse from "../form-data/form.data.model.js";
 
 const processDashboardCards = async ({ orgId }) => {
   try {
