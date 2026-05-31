@@ -10,16 +10,27 @@ const processDashboardCards = async ({ orgId }) => {
       organizationId: objectOrgId,
     });
 
-    const formIds = await SchemaModel.find(
-      { organizationId: objectOrgId },
-      { _id: 1 },
-    ).lean();
-
-    const filterFormIds = formIds.map((val) => val._id);
-
-    const totalResponses = await SubmittedResponse.countDocuments({
-      formId: { $in: filterFormIds },
-    });
+    const totalResponses = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: objectOrgId,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalResponses: {
+            $sum: "$responseCount",
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalResponses: 1,
+        },
+      },
+    ]);
 
     const activeForms = await SchemaModel.countDocuments({
       organizationId: objectOrgId,
@@ -45,14 +56,14 @@ const processDashboardCards = async ({ orgId }) => {
 
     const headers = [
       { label: "Total Forms", value: totalForms },
-      { label: "Responses", value: totalResponses },
+      { label: "Responses", value: totalResponses[0].totalResponses },
       { label: "Active Forms", value: activeForms },
       // { label: "Total Opened", value: totalOpened },
       {
         label: "Conversion",
         value:
           totalOpened > 0
-            ? `${((totalResponses / totalOpened) * 100).toFixed(2)}%`
+            ? `${((totalResponses[0].totalResponses / totalOpened) * 100).toFixed(2)}%`
             : 0,
       },
     ];
