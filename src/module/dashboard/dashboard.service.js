@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import SchemaModel from "../form/form.model.js";
-import SubmittedResponse from "../form-data/form.data.model.js";
 
 const processDashboardCards = async ({ orgId }) => {
   try {
@@ -10,16 +9,27 @@ const processDashboardCards = async ({ orgId }) => {
       organizationId: objectOrgId,
     });
 
-    const formIds = await SchemaModel.find(
-      { organizationId: objectOrgId },
-      { _id: 1 },
-    ).lean();
-
-    const filterFormIds = formIds.map((val) => val._id);
-
-    const totalResponses = await SubmittedResponse.countDocuments({
-      formId: { $in: filterFormIds },
-    });
+    const totalResponses = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: objectOrgId,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalResponses: {
+            $sum: "$responseCount",
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalResponses: 1,
+        },
+      },
+    ]);
 
     const activeForms = await SchemaModel.countDocuments({
       organizationId: objectOrgId,
@@ -45,14 +55,14 @@ const processDashboardCards = async ({ orgId }) => {
 
     const headers = [
       { label: "Total Forms", value: totalForms },
-      { label: "Responses", value: totalResponses },
+      { label: "Responses", value: totalResponses[0].totalResponses },
       { label: "Active Forms", value: activeForms },
       // { label: "Total Opened", value: totalOpened },
       {
         label: "Conversion",
         value:
           totalOpened > 0
-            ? `${((totalResponses / totalOpened) * 100).toFixed(2)}%`
+            ? `${((totalResponses[0].totalResponses / totalOpened) * 100).toFixed(2)}%`
             : 0,
       },
     ];
@@ -73,20 +83,19 @@ const processDashboardCards = async ({ orgId }) => {
 
 const processGetResponseAnalytics = async ({ orgId, today }) => {
   try {
-    // TODAY DATE
+    // TODAY
     const currentDate = today ? new Date(today) : new Date();
 
     // LAST 7 DAYS START
     const startDate = new Date(currentDate);
     startDate.setDate(currentDate.getDate() - 6);
-
     startDate.setHours(0, 0, 0, 0);
 
-    // END OF TODAY
+    // TODAY END
     const endDate = new Date(currentDate);
     endDate.setHours(23, 59, 59, 999);
 
-    // FETCH FORM IDS
+    // FETCH FORMS
     const forms = await SchemaModel.find(
       {
         organizationId: new mongoose.Types.ObjectId(orgId),
@@ -94,65 +103,88 @@ const processGetResponseAnalytics = async ({ orgId, today }) => {
       {
         _id: 1,
       },
-    );
+    ).lean();
 
-    const formIds = forms.map((f) => f._id);
+    // RUN AGGREGATION ON ALL FORM COLLECTIONS
+    const results = await Promise.all(
+      forms.map(async (form) => {
+        const collectionName = `${form._id}-${orgId}`;
 
-    const analytics = await SubmittedResponse.aggregate([
-      {
-        $match: {
-          formId: {
-            $in: formIds,
-          },
+        // skip if collection not created yet
+        const exists = await mongoose.connection.db
+          .listCollections({
+            name: collectionName,
+          })
+          .toArray();
 
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
+        if (!exists.length) return [];
 
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$createdAt",
+        const ResponseModel =
+          mongoose.models[collectionName] ||
+          mongoose.model(
+            collectionName,
+            new mongoose.Schema(
+              {},
+              {
+                strict: false,
+                timestamps: true,
+              },
+            ),
+            collectionName,
+          );
+
+        return ResponseModel.aggregate([
+          {
+            $match: {
+              createdAt: {
+                $gte: startDate,
+                $lte: endDate,
+              },
             },
           },
-
-          responses: {
-            $sum: 1,
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt",
+                },
+              },
+              responses: {
+                $sum: 1,
+              },
+            },
           },
-        },
-      },
+        ]);
+      }),
+    );
 
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
+    // MERGE ALL COLLECTION RESULTS
+    const merged = {};
 
+    results.flat().forEach((item) => {
+      if (!merged[item._id]) {
+        merged[item._id] = 0;
+      }
+
+      merged[item._id] += item.responses;
+    });
+
+    // BUILD 7 DAY DATA
     const finalData = [];
 
     for (let i = 6; i >= 0; i--) {
       const d = new Date(currentDate);
-
       d.setDate(currentDate.getDate() - i);
 
       const fullDate = d.toISOString().split("T")[0];
-
-      const found = analytics.find((a) => a._id === fullDate);
 
       finalData.push({
         day: d.toLocaleDateString("en-US", {
           weekday: "short",
         }),
-
         date: fullDate,
-
-        responses: found ? found.responses : 0,
+        responses: merged[fullDate] || 0,
       });
     }
 
@@ -163,7 +195,7 @@ const processGetResponseAnalytics = async ({ orgId, today }) => {
   } catch (error) {
     return {
       success: false,
-      messge: error.message,
+      message: error.message,
     };
   }
 };
@@ -181,35 +213,34 @@ const processGetPerformance = async ({ orgId }) => {
       status: "active",
     });
 
-    // GET FORM IDS
-    const forms = await SchemaModel.find(
-      {
-        organizationId: new mongoose.Types.ObjectId(orgId),
-      },
-      {
-        _id: 1,
-        opened: 1,
-      },
-    );
-
-    const formIds = forms.map((f) => f._id);
-
     // TOTAL RESPONSES
-    const totalResponses = await SubmittedResponse.countDocuments({
-      formId: {
-        $in: formIds,
+    const totalResponses = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: new mongoose.Types.ObjectId(orgId),
+        },
       },
-    });
+      {
+        $group: {
+          _id: null,
+          totalResponses: {
+            $sum: "$responseCount",
+          },
+          totalViews: {
+            $sum: "$opened",
+          },
+        },
+      },
+    ]);
 
     // TOTAL FORM OPENS
-    const totalFormViews = forms.reduce(
-      (acc, curr) => acc + (curr.opened || 0),
-      0,
-    );
+    const totalFormViews = totalResponses[0].totalViews;
 
     // AVG RESPONSES / FORM
     const avgResponsesPerForm =
-      totalForms > 0 ? (totalResponses / totalForms).toFixed(1) : 0;
+      totalForms > 0
+        ? (totalResponses[0].totalResponses / totalForms).toFixed(1)
+        : 0;
 
     // ACTIVE FORM %
     const activeFormsPercentage =
@@ -218,7 +249,7 @@ const processGetPerformance = async ({ orgId }) => {
     // COMPLETION RATE
     const completionRate =
       totalFormViews > 0
-        ? ((totalResponses / totalFormViews) * 100).toFixed(0)
+        ? ((totalResponses[0].totalResponses / totalFormViews) * 100).toFixed(0)
         : 0;
 
     return {
@@ -251,54 +282,94 @@ const processGetPerformance = async ({ orgId }) => {
 
 const processGetRecentResponse = async ({ orgId, limit = 5 }) => {
   try {
-    const recentForms = await SubmittedResponse.aggregate([
+    // FETCH ORG FORMS
+    const forms = await SchemaModel.find(
       {
-        $lookup: {
-          from: "schemas",
-          localField: "formId",
-          foreignField: "_id",
-          as: "formInfo",
-        },
+        organizationId: new mongoose.Types.ObjectId(orgId),
       },
-
       {
-        $unwind: "$formInfo",
+        _id: 1,
+        name: 1,
       },
+    ).lean();
 
-      {
-        $match: {
-          "formInfo.organizationId": new mongoose.Types.ObjectId(orgId),
-        },
-      },
+    // FETCH RESPONSES FROM ALL FORM COLLECTIONS
+    const results = await Promise.all(
+      forms.map(async (form) => {
+        const collectionName = `${form._id}-${orgId}`;
 
-      {
-        $project: {
-          _id: 1,
-          createdAt: 1,
-          form: "$formInfo.name",
-          user: {
-            $concat: [
+        // CHECK COLLECTION EXISTS
+        const exists = await mongoose.connection.db
+          .listCollections({
+            name: collectionName,
+          })
+          .toArray();
+
+        if (!exists.length) return [];
+
+        // REUSE MODEL
+        const ResponseModel =
+          mongoose.models[collectionName] ||
+          mongoose.model(
+            collectionName,
+            new mongoose.Schema(
+              {},
               {
-                $ifNull: ["$userResponse.First Name", ""],
+                strict: false,
+                timestamps: true,
               },
-              " ",
-              {
-                $ifNull: ["$userResponse.Last Name", ""],
+            ),
+            collectionName,
+          );
+
+        const responses = await ResponseModel.aggregate([
+          {
+            $project: {
+              _id: 1,
+              createdAt: 1,
+
+              user: {
+                $trim: {
+                  input: {
+                    $concat: [
+                      {
+                        $ifNull: ["$userResponse.First Name", ""],
+                      },
+                      " ",
+                      {
+                        $ifNull: ["$userResponse.Last Name", ""],
+                      },
+                    ],
+                  },
+                },
               },
-            ],
+            },
           },
-        },
-      },
 
-      {
-        $sort: {
-          createdAt: -1,
-        },
-      },
-      {
-        $limit: limit,
-      },
-    ]);
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+
+          {
+            $limit: limit,
+          },
+        ]);
+
+        // ATTACH FORM NAME
+        return responses.map((r) => ({
+          ...r,
+          form: form.name,
+        }));
+      }),
+    );
+
+    // MERGE + GLOBAL SORT
+    const recentForms = results
+      .flat()
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit);
 
     return {
       success: true,
