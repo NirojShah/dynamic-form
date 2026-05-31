@@ -283,54 +283,94 @@ const processGetPerformance = async ({ orgId }) => {
 
 const processGetRecentResponse = async ({ orgId, limit = 5 }) => {
   try {
-    const recentForms = await SubmittedResponse.aggregate([
+    // FETCH ORG FORMS
+    const forms = await SchemaModel.find(
       {
-        $lookup: {
-          from: "schemas",
-          localField: "formId",
-          foreignField: "_id",
-          as: "formInfo",
-        },
+        organizationId: new mongoose.Types.ObjectId(orgId),
       },
-
       {
-        $unwind: "$formInfo",
+        _id: 1,
+        name: 1,
       },
+    ).lean();
 
-      {
-        $match: {
-          "formInfo.organizationId": new mongoose.Types.ObjectId(orgId),
-        },
-      },
+    // FETCH RESPONSES FROM ALL FORM COLLECTIONS
+    const results = await Promise.all(
+      forms.map(async (form) => {
+        const collectionName = `${form._id}-${orgId}`;
 
-      {
-        $project: {
-          _id: 1,
-          createdAt: 1,
-          form: "$formInfo.name",
-          user: {
-            $concat: [
+        // CHECK COLLECTION EXISTS
+        const exists = await mongoose.connection.db
+          .listCollections({
+            name: collectionName,
+          })
+          .toArray();
+
+        if (!exists.length) return [];
+
+        // REUSE MODEL
+        const ResponseModel =
+          mongoose.models[collectionName] ||
+          mongoose.model(
+            collectionName,
+            new mongoose.Schema(
+              {},
               {
-                $ifNull: ["$userResponse.First Name", ""],
+                strict: false,
+                timestamps: true,
               },
-              " ",
-              {
-                $ifNull: ["$userResponse.Last Name", ""],
+            ),
+            collectionName,
+          );
+
+        const responses = await ResponseModel.aggregate([
+          {
+            $project: {
+              _id: 1,
+              createdAt: 1,
+
+              user: {
+                $trim: {
+                  input: {
+                    $concat: [
+                      {
+                        $ifNull: ["$userResponse.First Name", ""],
+                      },
+                      " ",
+                      {
+                        $ifNull: ["$userResponse.Last Name", ""],
+                      },
+                    ],
+                  },
+                },
               },
-            ],
+            },
           },
-        },
-      },
 
-      {
-        $sort: {
-          createdAt: -1,
-        },
-      },
-      {
-        $limit: limit,
-      },
-    ]);
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+
+          {
+            $limit: limit,
+          },
+        ]);
+
+        // ATTACH FORM NAME
+        return responses.map((r) => ({
+          ...r,
+          form: form.name,
+        }));
+      }),
+    );
+
+    // MERGE + GLOBAL SORT
+    const recentForms = results
+      .flat()
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit);
 
     return {
       success: true,
