@@ -214,35 +214,34 @@ const processGetPerformance = async ({ orgId }) => {
       status: "active",
     });
 
-    // GET FORM IDS
-    const forms = await SchemaModel.find(
-      {
-        organizationId: new mongoose.Types.ObjectId(orgId),
-      },
-      {
-        _id: 1,
-        opened: 1,
-      },
-    );
-
-    const formIds = forms.map((f) => f._id);
-
     // TOTAL RESPONSES
-    const totalResponses = await SubmittedResponse.countDocuments({
-      formId: {
-        $in: formIds,
+    const totalResponses = await SchemaModel.aggregate([
+      {
+        $match: {
+          organizationId: new mongoose.Types.ObjectId(orgId),
+        },
       },
-    });
+      {
+        $group: {
+          _id: null,
+          totalResponses: {
+            $sum: "$responseCount",
+          },
+          totalViews: {
+            $sum: "$opened",
+          },
+        },
+      },
+    ]);
 
     // TOTAL FORM OPENS
-    const totalFormViews = forms.reduce(
-      (acc, curr) => acc + (curr.opened || 0),
-      0,
-    );
+    const totalFormViews = totalResponses[0].totalViews;
 
     // AVG RESPONSES / FORM
     const avgResponsesPerForm =
-      totalForms > 0 ? (totalResponses / totalForms).toFixed(1) : 0;
+      totalForms > 0
+        ? (totalResponses[0].totalResponses / totalForms).toFixed(1)
+        : 0;
 
     // ACTIVE FORM %
     const activeFormsPercentage =
@@ -251,7 +250,7 @@ const processGetPerformance = async ({ orgId }) => {
     // COMPLETION RATE
     const completionRate =
       totalFormViews > 0
-        ? ((totalResponses / totalFormViews) * 100).toFixed(0)
+        ? ((totalResponses[0].totalResponses / totalFormViews) * 100).toFixed(0)
         : 0;
 
     return {
