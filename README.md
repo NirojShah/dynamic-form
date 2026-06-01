@@ -1,5 +1,9 @@
 # Dynamic Form - Backend Server
 
+[![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://www.javascript.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-v14+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=flat-square)](https://opensource.org/licenses/ISC)
+
 A powerful and flexible Node.js/Express backend server for managing dynamic forms with advanced features including form creation, public form sharing, analytics, user management, and more.
 
 ## 🎯 Overview
@@ -30,12 +34,14 @@ Dynamic Form is a comprehensive form management system that allows organizations
 - JWT-based authentication
 - User profile management
 - Secure password handling
+- ✅ User password update functionality
 
 ### 2. **Organization Management**
 - Organization creation and setup
 - Multi-organization support
 - Organization-based form management
 - User-organization associations
+- Organization ID tracking in responses
 
 ### 3. **Form Management**
 - ✅ Create new forms with custom fields
@@ -46,6 +52,7 @@ Dynamic Form is a comprehensive form management system that allows organizations
 - ✅ Delete forms (soft delete with status change)
 - ✅ Archive forms for organization
 - ✅ Retrieve archived forms
+- ✅ Response count tracking in form schema
 
 ### 4. **Public Forms**
 - ✅ Create public form templates
@@ -56,12 +63,13 @@ Dynamic Form is a comprehensive form management system that allows organizations
 - ✅ File upload support in public forms
 
 ### 5. **Form Responses & Analytics**
-- ✅ Collect form submissions
+- ✅ Collect form submissions with optimized storage
 - ✅ Retrieve and paginate form responses
 - ✅ Analytics dashboard with performance metrics
 - ✅ Track submissions over time (today + last 6 days)
 - ✅ Dashboard charts and statistics
 - ✅ Process and display response data
+- ✅ Dynamic collection creation based on formId-organizationId
 
 ### 6. **Form Validation**
 - Field-level validation
@@ -70,7 +78,7 @@ Dynamic Form is a comprehensive form management system that allows organizations
 - Required field checking
 
 ### 7. **Security**
-- CORS protection
+- CORS protection with environment-based configuration
 - Cookie-based session management
 - JWT authentication
 - Error handling with custom error utilities
@@ -153,6 +161,12 @@ environment_setup.js               # Environment configuration
 |--------|----------|-------------|
 | GET | `/app/v1/form/response/:key` | Get form submissions (paginated) |
 
+### User Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| PUT | `/app/v1/user/update-password` | Update user password |
+
 ## 🔧 Setup & Installation
 
 ### Prerequisites
@@ -180,6 +194,7 @@ environment_setup.js               # Environment configuration
    PORT=7050
    MONGODB_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret_key
+   CORS_ORIGINS=http://localhost:3000,http://localhost:5173
    ```
 
 4. **Start the server**
@@ -211,6 +226,7 @@ NODE_ENV=development|production
 PORT=7050
 MONGODB_URI=mongodb://...
 JWT_SECRET=your_secret_key
+CORS_ORIGINS=origin1,origin2,origin3
 ```
 
 ## 📊 Key Features in Detail
@@ -227,16 +243,18 @@ Forms support multiple field types:
 
 ### Form Response Tracking
 - Collect responses with file attachments
+- Dynamic collection creation per form-organization pair
+- Optimized storage using formId-organizationId schema
 - Paginate through submissions
 - Filter and search responses
 - Export response data
 
 ### Analytics Dashboard
-- Track form performance
+- Track form performance with real-time metrics
 - View submission trends
 - 7-day submission chart
-- Response rates
-- Form engagement metrics
+- Response rates and engagement metrics
+- Response count tracking per form
 
 ### Public Form Sharing
 - No authentication required for public forms
@@ -260,8 +278,21 @@ The application includes comprehensive error handling:
 3. Push to the branch (`git push origin feature/amazing-feature`)
 4. Open a Pull Request
 
-## 📝 Recent Improvements
+## 📝 Recent Improvements (Latest)
 
+- ✅ Dashboard Service Function Logic Update (PR #67)
+- ✅ Dashboard Service Update (PR #66)
+- ✅ Optimized form response data fetching from dynamic collections
+- ✅ Enhanced analytics dashboard with response count tracking
+- ✅ Refactored data fetching logic to use schema-based collections
+- ✅ Removed unused import statements and optimized code
+- ✅ User password update functionality
+- ✅ Dynamic collection creation for form responses (formId-organizationId)
+- ✅ Environment-based CORS origin configuration
+- ✅ Organization ID in API responses
+- ✅ Response format standardization (boolean success field)
+- ✅ Added form response count field to schema definition
+- ✅ Improved form utility functions for response processing
 - ✅ Added API for fetching archived forms
 - ✅ Implemented form archiving functionality
 - ✅ Enhanced form update API
@@ -274,13 +305,20 @@ The application includes comprehensive error handling:
 ## 📋 Upcoming Features
 
 - [ ] Complete API to change form status to archive (Issue #36)
-- [ ] Advanced form filtering and search
-- [ ] Form templates and presets
-- [ ] Conditional form logic
+- [ ] Advanced form filtering and search capabilities
+- [ ] Form templates and presets library
+- [ ] Conditional form logic and branching
 - [ ] WebSocket support for real-time updates
-- [ ] Export forms to various formats
-- [ ] Form permissions and sharing with users
-- [ ] Advanced analytics and reporting
+- [ ] Export forms to various formats (PDF, CSV, JSON)
+- [ ] Form permissions and granular sharing with users
+- [ ] Advanced analytics and reporting dashboard
+- [ ] Form versioning and rollback functionality
+- [ ] Bulk import/export of form responses
+- [ ] Custom domain support for public forms
+- [ ] Multi-language support for forms
+- [ ] Form scheduling and automated workflows
+- [ ] Email notifications for new responses
+- [ ] Integration with third-party services (Zapier, IFTTT)
 
 ## 📧 Contact & Support
 
