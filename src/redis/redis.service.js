@@ -24,7 +24,21 @@ const processSetValue = async ({ key, value, ttlSec = 3600 }) => {
   }
 };
 
-const processGetValue = async (key) => {};
+const processGetValue = async (key) => {
+  try {
+    const data = await redisUtility.redisClient.get(key);
+    if (!data) {
+      return null;
+    }
+
+    return JSON.parse(data);
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
 
 const redisServices = {
   processSetValue,
