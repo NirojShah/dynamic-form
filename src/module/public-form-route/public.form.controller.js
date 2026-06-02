@@ -1,3 +1,4 @@
+import redisServices from "../../redis/redis.service.js";
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
 import CustomError from "../../utility/customError.js";
 import formDataService from "../form-data/form.data.service.js";
@@ -9,7 +10,17 @@ import parseFormPayload from "./public.form.utility.js";
 
 const getPublicForm = asyncErrorHandler(async (req, res) => {
   const { key } = req.params;
+  const cacheMem = await redisServices.processGetValue(key);
+  if (cacheMem) {
+    return res.status(200).json({
+      success: true,
+      data: cacheMem,
+    });
+  }
   const resp = await publicFormService.processGetPublicForm({ key });
+
+  await redisServices.processSetValue({ key, value: resp.data, ttlSec: 36000 });
+
   if (resp.success) {
     return res.status(200).json({
       success: true,
@@ -41,6 +52,7 @@ const handleUploadUploadUserData = asyncErrorHandler(async (req, res) => {
   const resp = await formDataService.processUploadResponse({
     formId,
     data: dataArray,
+    orgId: form.organizationId,
   });
 
   if (resp.success) {
