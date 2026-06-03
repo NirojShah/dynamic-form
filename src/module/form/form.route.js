@@ -17,4 +17,7 @@ formRoute.put("/update", formController.updateForm);
 formRoute.get("/archieved", formController.archievedForms);
 formRoute.patch("/archive", formController.markAsArchieved);
 
+formRoute.get("/favourite", formController.getAllFavourite);
+formRoute.put("/mark-as-favourite", formController.markAsFavourite);
+
 export default formRoute;
