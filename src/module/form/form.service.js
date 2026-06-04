@@ -450,6 +450,49 @@ const processMarkAsArchive = async ({ title, organizationId }) => {
   }
 };
 
+const processGetFavouriteForms = async ({ userId }) => {
+  try {
+    const favouriteForms = await SchemaModel.aggregate([
+      {
+        $match: {
+          favourite: {
+            $in: [new mongoose.Types.ObjectId(userId)],
+          },
+        },
+      },
+    ]);
+
+    return {
+      success: true,
+      data: favouriteForms,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
+const markFormAsFavourite = async ({ userId, formId }) => {
+  try {
+    const form = await SchemaModel.findById(formId);
+    form.favourite.push(userId);
+
+    await form.save();
+
+    return {
+      success: true,
+      message: "Successfully Marked.",
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -463,6 +506,8 @@ const formService = {
   processUpdateForm,
   processFetchArchievedForms,
   processMarkAsArchive,
+  processGetFavouriteForms,
+  markFormAsFavourite,
 };
 
 export default formService;

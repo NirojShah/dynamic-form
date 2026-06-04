@@ -266,6 +266,46 @@ const markAsArchieved = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const getAllFavourite = asyncErrorHandler(async (req, res) => {
+  const { userId } = req.user.userId;
+  const resp = await formService.processGetFavouriteForms({ userId });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+
+  return res.status(500).json({
+    success: true,
+    data: resp.message,
+  });
+});
+
+const markAsFavourite = asyncErrorHandler(async (req, res) => {
+  const { key } = req.query;
+  const { userId } = req.user;
+
+  const formId = formUtility.decrypter(key);
+
+  const resp = await formService.markFormAsFavourite({
+    userId,
+    formId,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      message: resp.message,
+    });
+  }
+  return res.status(500).json({
+    success: true,
+    message: resp.message,
+  });
+});
+
 const formController = {
   createForm,
   addFileds,
@@ -280,6 +320,9 @@ const formController = {
   updateForm,
   archievedForms,
   markAsArchieved,
+
+  getAllFavourite,
+  markAsFavourite,
 };
 
 export default formController;
