@@ -12,4 +12,6 @@ userRoute.put("/deactivate", verifyToken, userController.deactivateProfile);
 userRoute.put("/update-profile", verifyToken, userController.updateProfile);
 userRoute.put("/update/password", verifyToken, userController.updatePassword);
 
+userRoute.get("/organization-users", verifyToken, userController.getMyOrgUsers);
+
 export default userRoute;
