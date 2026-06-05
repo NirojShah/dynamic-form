@@ -124,6 +124,23 @@ const updatePassword = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const getMyOrgUsers = asyncErrorHandler(async (req, res) => {
+  const { organizationId } = req.user;
+  const { page, limit } = req.query;
+  const resp = await userService.processGetMyOrgUsersList({
+    page,
+    limit,
+    orgId: organizationId,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.users,
+    });
+  }
+});
+
 const userController = {
   createUser,
   login,
@@ -132,6 +149,7 @@ const userController = {
   createAdminProfile,
   verifyMe,
   updatePassword,
+  getMyOrgUsers,
 };
 
 export default userController;
