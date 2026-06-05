@@ -222,6 +222,35 @@ const processUpdatePassword = async ({
   }
 };
 
+const processGetMyOrgUsersList = async ({ orgId, limit, page }) => {
+  try {
+    const skip = page - 1 * limit;
+    const usersList = await User.aggregate([
+      {
+        $match: {
+          organization: new mongoose.Types.ObjectId(orgId),
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    return {
+      success: true,
+      users: usersList,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const userService = {
   processLogin,
   processSignup,
@@ -230,6 +259,7 @@ const userService = {
   processSignupAdmin,
   loggedInUserDetails,
   processUpdatePassword,
+  processGetMyOrgUsersList,
 };
 
 export default userService;
