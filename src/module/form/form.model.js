@@ -105,6 +105,9 @@ const SchemaDefinition = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    favorite: {
+      type: [mongoose.Types.ObjectId],
+    },
   },
   {
     timestamps: true,
