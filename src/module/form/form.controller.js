@@ -284,14 +284,13 @@ const getAllFavourite = asyncErrorHandler(async (req, res) => {
 });
 
 const markAsFavourite = asyncErrorHandler(async (req, res) => {
-  const { key } = req.query;
-  const { userId } = req.user;
-
-  const formId = formUtility.decrypter(key);
+  const { title } = req.body;
+  const { userId, organizationId } = req.user;
 
   const resp = await formService.markFormAsFavourite({
+    title,
     userId,
-    formId,
+    organizationId,
   });
 
   if (resp.success) {
