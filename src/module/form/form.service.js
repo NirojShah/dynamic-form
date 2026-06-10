@@ -455,7 +455,7 @@ const processGetFavouriteForms = async ({ userId }) => {
     const favouriteForms = await SchemaModel.aggregate([
       {
         $match: {
-          favourite: {
+          favorite: {
             $in: [new mongoose.Types.ObjectId(userId)],
           },
         },
@@ -474,10 +474,32 @@ const processGetFavouriteForms = async ({ userId }) => {
   }
 };
 
-const markFormAsFavourite = async ({ userId, formId }) => {
+const markFormAsFavourite = async ({ title, organizationId, userId }) => {
   try {
-    const form = await SchemaModel.findById(formId);
-    form.favourite.push(userId);
+    const form = await SchemaModel.findOne({
+      name: title,
+      organizationId: organizationId,
+    });
+
+    if (!form) {
+      return {
+        success: false,
+        message: "form not found.",
+      };
+    }
+
+    if (!form.favorite) {
+      form.favorite = [];
+    }
+
+    if (form.favorite.includes(userId)) {
+      return {
+        success: true,
+        message: "already marked.",
+      };
+    }
+
+    form.favorite.push(new mongoose.Types.ObjectId(userId));
 
     await form.save();
 
