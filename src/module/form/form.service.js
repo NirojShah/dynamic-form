@@ -515,6 +515,39 @@ const markFormAsFavourite = async ({ title, organizationId, userId }) => {
   }
 };
 
+const processShareform = async ({ formTitle, orgId , shareWith}) => {
+  try {
+    const formExists = await SchemaModel.aggregate([
+      {
+        $match: {
+          $and: [
+            {
+              name: formTitle,
+            },
+            {
+              organizationId: orgId,
+            },
+          ],
+        },
+      },
+    ]);
+
+    if (formExists.length == 0) {
+      return {
+        success: false,
+        message: "Form Not Found.",
+      };
+    }
+
+    // Create Logic to handle the SHARE FEATURE.
+  } catch (err) {
+    return {
+      succes: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -530,6 +563,7 @@ const formService = {
   processMarkAsArchive,
   processGetFavouriteForms,
   markFormAsFavourite,
+  processShareform,
 };
 
 export default formService;
