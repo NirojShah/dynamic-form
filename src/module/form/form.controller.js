@@ -305,6 +305,27 @@ const markAsFavourite = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const shareForm = asyncErrorHandler(async (req, res) => {
+  const { formTitle, shareWith } = req.body;
+  const orgId = req.user.organizationId;
+  const resp = await formService.processShareform({
+    formTitle,
+    orgId,
+    shareWith,
+  });
+  if (resp.succes) {
+    return res.status(200).json({
+      success: true,
+      message: "successfully shared with the users.",
+    });
+  }
+
+  return res.status(400).json({
+    success: false,
+    message: resp.message,
+  });
+});
+
 const formController = {
   createForm,
   addFileds,
@@ -322,6 +343,8 @@ const formController = {
 
   getAllFavourite,
   markAsFavourite,
+
+  shareForm,
 };
 
 export default formController;
