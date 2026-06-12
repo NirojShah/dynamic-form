@@ -20,4 +20,6 @@ formRoute.patch("/archive", formController.markAsArchieved);
 formRoute.get("/favourite", formController.getAllFavourite);
 formRoute.patch("/mark-as-favourite", formController.markAsFavourite);
 
+formRoute.patch("/share-form", formController.shareForm);
+
 export default formRoute;
