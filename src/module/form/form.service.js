@@ -5,6 +5,7 @@ import SchemaModel from "./form.model.js";
 import CustomError from "../../utility/customError.js";
 import Organization from "../organization/organization.model.js";
 import formUtility from "./form.utility.js";
+import ShareForm from "./shareForm.model.js";
 
 const processCreateForm = async ({ name, organizationId, createdBy }) => {
   const form = await SchemaModel.create({
@@ -515,7 +516,7 @@ const markFormAsFavourite = async ({ title, organizationId, userId }) => {
   }
 };
 
-const processShareform = async ({ formTitle, orgId , shareWith}) => {
+const processShareform = async ({ formTitle, orgId, shareWith }) => {
   try {
     const formExists = await SchemaModel.aggregate([
       {
@@ -539,7 +540,18 @@ const processShareform = async ({ formTitle, orgId , shareWith}) => {
       };
     }
 
-    // Create Logic to handle the SHARE FEATURE.
+    const data = shareWith.map((val) => {
+      return {
+        formId: formExists[0]._id,
+        userId: val,
+      };
+    });
+    await ShareForm.insertMany(data);
+
+    return {
+      success: true,
+      message: "successfully shared.",
+    };
   } catch (err) {
     return {
       succes: false,
