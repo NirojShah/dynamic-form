@@ -326,6 +326,28 @@ const shareForm = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const sharedWithMe = asyncErrorHandler(async (req, res) => {
+  const { userId } = req.user;
+  const { page, limit } = req.query;
+  const resp = await formService.processGetSharedWithMe({
+    userId,
+    page,
+    limit,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
+});
+
 const formController = {
   createForm,
   addFileds,
@@ -345,6 +367,7 @@ const formController = {
   markAsFavourite,
 
   shareForm,
+  sharedWithMe,
 };
 
 export default formController;
