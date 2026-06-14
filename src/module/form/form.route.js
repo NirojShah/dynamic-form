@@ -21,5 +21,6 @@ formRoute.get("/favourite", formController.getAllFavourite);
 formRoute.patch("/mark-as-favourite", formController.markAsFavourite);
 
 formRoute.patch("/share-form", formController.shareForm);
+formRoute.get("/shared-with-me", formController.sharedWithMe);
 
 export default formRoute;
