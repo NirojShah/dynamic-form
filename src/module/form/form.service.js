@@ -560,6 +560,35 @@ const processShareform = async ({ formTitle, orgId, shareWith }) => {
   }
 };
 
+const processGetSharedWithMe = async ({ userId, page, limit }) => {
+  try {
+    const skip = (page - 1) * limit;
+    const forms = await ShareForm.aggregate([
+      {
+        $match: {
+          userId: userId,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    return {
+      success: true,
+      data: forms,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -576,6 +605,7 @@ const formService = {
   processGetFavouriteForms,
   markFormAsFavourite,
   processShareform,
+  processGetSharedWithMe,
 };
 
 export default formService;
