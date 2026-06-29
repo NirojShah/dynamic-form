@@ -589,6 +589,29 @@ const processGetSharedWithMe = async ({ userId, page, limit }) => {
   }
 };
 
+const processGetformDetailById = async ({ formId }) => {
+  try {
+    const formExists = await SchemaModel.findById(formId);
+
+    if (!formExists) {
+      return {
+        success: false,
+        message: "Form not found.",
+      };
+    }
+    return {
+      success: true,
+      data: formExists,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
+
 const formService = {
   processCreateForm,
   processAddFields,
@@ -606,6 +629,7 @@ const formService = {
   markFormAsFavourite,
   processShareform,
   processGetSharedWithMe,
+  processGetformDetailById,
 };
 
 export default formService;
