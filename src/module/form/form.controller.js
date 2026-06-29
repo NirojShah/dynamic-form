@@ -348,6 +348,16 @@ const sharedWithMe = asyncErrorHandler(async (req, res) => {
   });
 });
 
+const handleFormResponseQuestions = asyncErrorHandler(async (req, res) => {
+  const { formId, query } = req.body;
+  const decryptFormId = formUtility.decrypter(formId);
+  const modelInfo = await formService.processGetformDetailById({
+    formId: decryptFormId,
+  });
+  
+  return res.status(200).json(modelInfo);
+});
+
 const formController = {
   createForm,
   addFileds,
@@ -368,6 +378,8 @@ const formController = {
 
   shareForm,
   sharedWithMe,
+
+  handleFormResponseQuestions,
 };
 
 export default formController;
