@@ -2,20 +2,32 @@ import { config_env } from "../../environment_setup.js";
 
 config_env();
 
-const buildPrompt = ({ query, data }) => {
-  const serializedData =
-    typeof data === "string" ? data : JSON.stringify(data, null, 2);
+const buildPrompt = ({ query, formTemplate, responseExample }) => {
+  return `
+You are a MongoDB query generator.
 
-  return [
-    "You are a helpful assistant.",
-    "Use the provided data when it helps answer the user's request.",
-    "",
-    "User query:",
-    query,
-    "",
-    "Data:",
-    serializedData,
-  ].join("\n");
+Your task:
+- Analyze the form template and understand the available fields.
+- Analyze how responses are stored.
+- Convert the user's request into a MongoDB filter object.
+
+Rules:
+- Return ONLY a valid JSON MongoDB query.
+- Do NOT explain anything.
+- Do NOT include collection name.
+- Use "userResponse.<fieldName>" for matching fields.
+- If the field is an array, use $in or $all when appropriate.
+- Infer intent from the user query.
+
+Form Template:
+${JSON.stringify(formTemplate, null, 2)}
+
+Response Structure Example:
+${JSON.stringify(responseExample, null, 2)}
+
+User Query:
+${query}
+`;
 };
 
 const getApiKey = () => {
@@ -31,12 +43,13 @@ const getApiKey = () => {
   return apiKey;
 };
 
-const processUserQuery = async ({ query, data }) => {
+const processUserQuery = async ({ query, formTemplate, responseExample }) => {
   if (!query || typeof query !== "string") {
     throw new Error("A non-empty query string is required");
   }
 
-  const prompt = buildPrompt({ query, data });
+  const prompt = buildPrompt({ query, formTemplate, responseExample });
+
   const apiKey = getApiKey();
   const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -61,7 +74,9 @@ const processUserQuery = async ({ query, data }) => {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Gemini API request failed (${response.status}): ${errorBody}`);
+    throw new Error(
+      `Gemini API request failed (${response.status}): ${errorBody}`,
+    );
   }
 
   const result = await response.json();
@@ -69,7 +84,9 @@ const processUserQuery = async ({ query, data }) => {
     result?.candidates?.[0]?.content?.parts?.[0]?.text ||
     result?.text ||
     result?.candidates
-      ?.map((candidate) => candidate?.content?.parts?.map((part) => part?.text).join(""))
+      ?.map((candidate) =>
+        candidate?.content?.parts?.map((part) => part?.text).join(""),
+      )
       .join("") ||
     "";
 
