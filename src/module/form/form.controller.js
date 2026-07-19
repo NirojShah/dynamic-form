@@ -1,5 +1,6 @@
 // controller/form.controller.js
 
+import AiApis from "../../Ai API's/ai.api.service.js";
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
 import CustomError from "../../utility/customError.js";
 import formDataService from "../form-data/form.data.service.js";
@@ -354,8 +355,22 @@ const handleFormResponseQuestions = asyncErrorHandler(async (req, res) => {
   const modelInfo = await formService.processGetformDetailById({
     formId: decryptFormId,
   });
-  
-  return res.status(200).json(modelInfo);
+  const responseExample = await formDataService.processGetUserResponse({
+    formId: decryptFormId,
+    page: 1,
+    limit: 1,
+    organizationId: req.user.organizationId,
+  });
+
+  // Integrate the service - To get the data after getting the generated data from the AI API.
+
+  const resp = await AiApis.processUserQuery({
+    query,
+    formTemplate: modelInfo,
+    responseExample: responseExample.data[0],
+  });
+
+  return res.status(200).json({ modelInfo, resp });
 });
 
 const formController = {
