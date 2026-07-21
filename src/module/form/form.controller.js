@@ -4,6 +4,7 @@ import AiApis from "../../Ai API's/ai.api.service.js";
 import asyncErrorHandler from "../../utility/asyncErrorHandler.js";
 import CustomError from "../../utility/customError.js";
 import formDataService from "../form-data/form.data.service.js";
+import questionService from "../question-resp/question.service.js";
 import formService from "./form.service.js";
 import formUtility from "./form.utility.js";
 import checkFormFields from "./form.validation.js";
@@ -364,13 +365,28 @@ const handleFormResponseQuestions = asyncErrorHandler(async (req, res) => {
 
   // Integrate the service - To get the data after getting the generated data from the AI API.
 
-  const resp = await AiApis.processUserQuery({
+  const aiGeneratedQuery = await AiApis.processUserQuery({
     query,
     formTemplate: modelInfo,
     responseExample: responseExample.data[0],
   });
 
-  return res.status(200).json({ modelInfo, resp });
+  const resp = await questionService.questionResponse({
+    aggregatePipeline: aiGeneratedQuery.data.pipeline,
+    formId: decryptFormId,
+    orgId: req.user.organizationId,
+  });
+
+  if (resp.success) {
+    return res.status(200).json({
+      success: true,
+      data: resp.data,
+    });
+  }
+  return res.status(500).json({
+    success: false,
+    message: resp.message,
+  });
 });
 
 const formController = {
