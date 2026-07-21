@@ -255,8 +255,6 @@ const processUserQuery = async ({ query, formTemplate, responseExample }) => {
 
   const prompt = buildPrompt({ query, formTemplate, responseExample });
 
-  console.log(prompt);
-
   const apiKey = getApiKey();
   const model = "gemini-2.5-flash";
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
