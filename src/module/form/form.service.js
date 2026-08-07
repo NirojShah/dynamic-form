@@ -121,9 +121,9 @@ const createFormWithfields = async ({ title, desc, fields, orgId, userId }) => {
 
       options: field.options
         ? field.options.map((opt) => ({
-            label: opt,
-            value: opt,
-          }))
+          label: opt,
+          value: opt,
+        }))
         : [],
     }));
 
@@ -355,9 +355,9 @@ const processUpdateForm = async ({
 
       options: field.options
         ? field.options.map((opt) => ({
-            label: opt,
-            value: opt,
-          }))
+          label: opt,
+          value: opt,
+        }))
         : [],
     }));
 
@@ -461,6 +461,15 @@ const processGetFavouriteForms = async ({ userId }) => {
           },
         },
       },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          organizationId: 1,
+          createdBy: 1
+        }
+      }
     ]);
 
     return {
