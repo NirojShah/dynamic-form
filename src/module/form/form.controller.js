@@ -269,7 +269,7 @@ const markAsArchieved = asyncErrorHandler(async (req, res) => {
 });
 
 const getAllFavourite = asyncErrorHandler(async (req, res) => {
-  const { userId } = req.user.userId;
+  const userId = req.user.userId;
   const resp = await formService.processGetFavouriteForms({ userId });
 
   if (resp.success) {
@@ -352,10 +352,11 @@ const sharedWithMe = asyncErrorHandler(async (req, res) => {
 
 const handleFormResponseQuestions = asyncErrorHandler(async (req, res) => {
   const { formId, query } = req.body;
+  console.log(formId, query)
   const decryptFormId = formUtility.decrypter(formId);
   const modelInfo = await formService.processGetformDetailById({
     formId: decryptFormId,
-  });
+  }); 
   const responseExample = await formDataService.processGetUserResponse({
     formId: decryptFormId,
     page: 1,
