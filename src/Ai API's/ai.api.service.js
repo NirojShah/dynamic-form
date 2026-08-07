@@ -1,7 +1,5 @@
 import { config_env } from "../../environment_setup.js";
 
-config_env();
-
 const buildPrompt = ({ query, formTemplate, responseExample }) => {
   return `
 You are an expert MongoDB query generator.
