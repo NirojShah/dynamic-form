@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "start": "SET NODE_ENV=production& nodemon server.js",
-    "dev": "SET NODE_ENV=development& nodemon server.js",
+    "start": "NODE_ENV=production nodemon server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
     "lint": "eslint ."
   },
   "keywords": [],
